@@ -1,0 +1,3 @@
+Network:
+    Write_all and read_all (slides) (check para a messagem do tamanho é size of int)
+    Enviar o tamanho antes da messagem
