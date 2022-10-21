@@ -1,4 +1,4 @@
 
 struct rtree_t{
-    //TDOD
+    struct sockaddr_in server;
 };
