@@ -1,10 +1,77 @@
-#include "tree_skel.h"
+#include "inet.h"
+#include <errno.h>
 
 /* Função para preparar uma socket de receção de pedidos de ligação
  * num determinado porto.
  * Retornar descritor do socket (OK) ou -1 (erro).
  */
-int network_server_init(short port);
+int network_server_init(short port){
+    int listening_socket;
+    struct sockaddr_in server;
+
+    // Cria socket TCP
+    if ((listening_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
+        perror("Erro ao criar socket");
+        return -1;
+    }
+
+    // Preenche estrutura server com endereço(s) para associar (bind) à socket 
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port); // Porta TCP
+    server.sin_addr.s_addr = htonl(INADDR_ANY); // Todos os endereços na máquina
+
+    // Faz bind
+    if (bind(listening_socket, (struct sockaddr *) &server, sizeof(server)) < 0){
+        perror("Erro ao fazer bind");
+        close(listening_socket);
+        return -1;
+    }
+
+    // Esta chamada diz ao SO que esta é uma socket para receber pedidos
+    if (listen(listening_socket, 0) < 0){
+        perror("Erro ao executar listen");
+        close(listening_socket);
+        return -1;
+    }
+
+    return listening_socket;
+}
+
+/* Função para ler toda uma messagem num determinado porto.
+ * Retornar o tamanho total lido (OK) ou <0 (erro).
+ */
+int read_all(int sock, char *buf, int len){
+    int bufsize = len;
+    while(len>0) {
+        int res = read(sock, buf, len);
+        if(res<0) {
+            if(errno==EINTR) continue;
+            perror("write failed:");
+            return res;
+        }
+    buf += res;
+    len -= res;
+    }
+    return bufsize;
+}
+
+/* Função para escrever toda uma messagem num determinado porto.
+ * Retornar o tamanho total escrito (OK) ou <0 (erro).
+ */
+int write_all(int sock, char *buf, int len){
+    int bufsize = len;
+    while(len>0) {
+        int res = write(sock, buf, len);
+        if(res<0) {
+            if(errno==EINTR) continue;
+            perror("write failed:");
+            return res;
+        }
+    buf += res;
+    len -= res;
+    }
+    return bufsize;
+}
 
 /* Esta função deve:
  * - Aceitar uma conexão de um cliente;
@@ -13,14 +80,55 @@ int network_server_init(short port);
  * - Esperar a resposta do skeleton;
  * - Enviar a resposta ao cliente usando a função network_send.
  */
-int network_main_loop(int listening_socket);
+int network_main_loop(int listening_socket){
+
+    //Aceitar uma conexão de um cliente
+    //while(1){
+        //call network_receive()
+        //call invoke()
+        //call network_send(return from invoke())
+    //}
+
+    int connsockfd;
+    struct sockaddr_in client;
+    socklen_t size_client;
+    int msg, msg_size;
+
+    while ((connsockfd = accept(listening_socket,(struct sockaddr *) &client, &size_client)) != -1) {
+
+		// For now just gonna read a int and send it + 1 back (just to see if all else is working)
+
+		if((msg_size = read(connsockfd, msg, MAX_MSG)) < 0){ //Trocar por read_all depois
+			perror("Erro ao receber dados do cliente");
+			close(connsockfd);
+			continue;
+		}
+		
+        printf("Recieved: %d", msg);
+        msg++;
+        printf("Sending: %d", msg);
+		
+		if((msg_size = write(connsockfd, &msg, sizeof(msg))) != sizeof(msg)){ //Trocar por write_all depois
+			perror("Erro ao enviar resposta ao cliente");
+			close(connsockfd);
+			continue;
+		}
+
+		// Fecha socket referente a esta conexão
+		close(connsockfd);
+    }
+
+}
 
 /* Esta função deve:
  * - Ler os bytes da rede, a partir do client_socket indicado;
  * - De-serializar estes bytes e construir a mensagem com o pedido,
  *   reservando a memória necessária para a estrutura message_t.
  */
-struct message_t *network_receive(int client_socket);
+struct message_t *network_receive(int client_socket){
+
+}
+
 
 /* Esta função deve:
  * - Serializar a mensagem de resposta contida em msg;
