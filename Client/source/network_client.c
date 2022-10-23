@@ -11,20 +11,57 @@
  * - Retornar 0 (OK) ou -1 (erro).
  */
 int network_connect(struct rtree_t *rtree){
-    int sockfd;
 
-    // Cria socket TCP
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    // Cria socket TCP e guarda-a no rtree
+    if ((rtree->client_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Erro ao criar socket TCP");
         return -1;
     }
 
     // Estabelece conexão com o servidor definido na estrutura server
-    if (connect(sockfd,(struct sockaddr *)&rtree->server, sizeof(rtree->server)) < 0) {
+    if (connect(rtree->client_sockfd,(struct sockaddr *)&rtree->server, sizeof(rtree->server)) < 0) {
         perror("Erro ao conectar-se ao servidor");
-        close(sockfd);
+        close(rtree->client_sockfd);
         return -1;
     }
+
+    return 0;
+}
+
+/* Função para ler toda uma messagem num determinado porto.
+ * Retornar o tamanho total lido (OK) ou <0 (erro).
+ */
+int read_all(int sock, char *buf, int len){
+    int bufsize = len;
+    while(len>0) {
+        int res = read(sock, buf, len);
+        if(res<0) {
+            if(errno==EINTR) continue;
+            perror("write failed:");
+            return res;
+        }
+    buf += res;
+    len -= res;
+    }
+    return bufsize;
+}
+
+/* Função para escrever toda uma messagem num determinado porto.
+ * Retornar o tamanho total escrito (OK) ou <0 (erro).
+ */
+int write_all(int sock, char *buf, int len){
+    int bufsize = len;
+    while(len>0) {
+        int res = write(sock, buf, len);
+        if(res<0) {
+            if(errno==EINTR) continue;
+            perror("write failed:");
+            return res;
+        }
+    buf += res;
+    len -= res;
+    }
+    return bufsize;
 }
 
 /* Esta função deve:
@@ -36,12 +73,32 @@ int network_connect(struct rtree_t *rtree){
  * - Retornar a mensagem de-serializada ou NULL em caso de erro.
  */
 struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t *msg){
-    return NULL;
+
+    int nbytes, answer;
+
+    // Envia string
+    if((nbytes = write(rtree->client_sockfd, rtree->message, sizeof(int))) != sizeof(int)){
+        perror("Erro ao enviar dados ao servidor");
+        close(rtree->client_sockfd);
+        return -1;
+    }
+
+    printf("À espera de resposta do servidor ...\n");
+
+    // Recebe tamanho da string
+    if((nbytes = read(rtree->client_sockfd, &answer, sizeof(int))) != sizeof(int)){
+        perror("Erro ao receber dados do servidor");
+        close(rtree->client_sockfd);
+        return -1;
+    };
+
+    return answer;
 }
 
 /* A função network_close() fecha a ligação estabelecida por
  * network_connect().
  */
 int network_close(struct rtree_t * rtree){
+    close(rtree->client_sockfd);
     return 0;
 }
