@@ -83,11 +83,19 @@ int write_all(int sock, char *buf, int len){
 struct message_t *network_receive(int client_socket){
     int msg, msg_size;
 
-    if((msg_size = read(client_socket, &msg, MAX_MSG)) < 0){ //Trocar por read_all depois
+    if(read_all(client_socket, &msg_size, sizeof(int)) < 0){
+		perror("Erro ao receber tamnaho dos dados do cliente");
+		close(client_socket);
+    }
+
+    printf("---Expecting message of size: %d---\n", msg_size);
+
+    if(read_all(client_socket, &msg, msg_size) < 0){
 		perror("Erro ao receber dados do cliente");
 		close(client_socket);
-	}
-    //De-serialise here
+    }
+
+    //TODO De-serialise here
 
     return msg;
 }
@@ -101,11 +109,20 @@ struct message_t *network_receive(int client_socket){
 int network_send(int client_socket, struct message_t *msg){
     int msg_size;
 
-    //serialise here
-    if((msg_size = write(client_socket, &msg, sizeof(msg))) != sizeof(msg)){ //Trocar por write_all depois
-		perror("Erro ao enviar resposta ao cliente");
+    //TODO serialise here
+
+    msg_size = sizeof(int); //switch this for protobuf get pakage size
+
+    if(write_all(client_socket, &msg_size, sizeof(int)) < 0){
+        perror("Erro ao enviar tamanho da resposta ao cliente");
+        close(client_socket);
+    }
+
+    if(write_all(client_socket, &msg, msg_size) < 0){
+        perror("Erro ao enviar resposta ao cliente");
     	close(client_socket);
-	}
+    }
+    
     //free memory here
     return 0;
 }
@@ -129,24 +146,34 @@ int network_main_loop(int listening_socket){
     int connsockfd;
     struct sockaddr_in client;
     socklen_t size_client = sizeof(client);
-    int msg;
+    int msg; //TODO Change this type
+
+    printf("Server listening...\n");
 
     while ((connsockfd = accept(listening_socket,(struct sockaddr *) &client, &size_client)) != -1) {
 
         printf("Connection established in port: %d\n", connsockfd);
 
+		msg = (int)network_receive(connsockfd);
+
+        //-----DEBUG TO BE REMOVED-----
 		// For now just gonna read a int and send it + 1 back (just to see if all else is working)
 
-		msg = (int)network_receive(connsockfd);
+
 		
-        printf("Recieved: %d", msg);
+        printf("Recieved: %d\n", msg);
         msg++;
-        printf("Sending: %d", msg);
+        printf("Sending: %d\n", msg);
+        
+
+
+        //-----UNTIL HERE-----
 
         network_send(connsockfd, msg);
 
 		// Fecha socket referente a esta conexão
 		close(connsockfd);
+        printf("Closed connection with port: %d\n\n", connsockfd);
     }
 
 }

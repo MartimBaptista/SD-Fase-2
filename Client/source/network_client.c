@@ -74,24 +74,40 @@ int write_all(int sock, char *buf, int len){
  */
 struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t *msg){
 
-    int nbytes, answer;
+    int msg_size, answer_size, answer;
 
-    // Envia o int
-    printf("Args: %d, %d, %d\n", rtree->client_sockfd, rtree->message, sizeof(int)); //TODO remove this
-    if((nbytes = write(rtree->client_sockfd, &rtree->message, sizeof(int))) != sizeof(int)){
+    //SENDING REQUEST
+
+    msg_size = sizeof(rtree->message); //switch this for protobuf get pakage size
+
+    if(write_all(rtree->client_sockfd, &msg_size, sizeof(int)) < 0){
+        perror("Erro ao enviar tamanho dos dados ao servidor");
+        close(rtree->client_sockfd);
+        return -1;
+    }
+
+    if(write_all(rtree->client_sockfd, &rtree->message, msg_size) < 0){
         perror("Erro ao enviar dados ao servidor");
         close(rtree->client_sockfd);
         return -1;
     }
 
-    printf("À espera de resposta do servidor ...\n");
 
-    // Recebe tamanho da string
-    if((nbytes = read(rtree->client_sockfd, &answer, sizeof(int))) != sizeof(int)){
+    //RECEIVING ANSWER
+
+    if(read_all(rtree->client_sockfd, &answer_size, sizeof(int)) < 0){
+		perror("Erro ao receber tamanho dos dados do servidor");
+		close(rtree->client_sockfd);
+        return -1;
+    }
+
+    printf("---Expecting message of size: %d---\n", answer_size);
+
+    if(read_all(rtree->client_sockfd, &answer, answer_size) < 0){
         perror("Erro ao receber dados do servidor");
         close(rtree->client_sockfd);
         return -1;
-    };
+    }
 
     return answer;
 }
