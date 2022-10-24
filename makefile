@@ -24,8 +24,10 @@ clean:
 	rm -f $(Client_dir)/$(OBJ_dir)/* $(Client_dir)/binary/* $(Server_dir)/$(OBJ_dir)/* $(Server_dir)/binary/*
 
 #temp
-test_cliente:
-
+test_client:
+	gcc testing_stuff/test_client.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/test_client.o -g -Wall
+	gcc $(Client_dir)/source/network_client.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/network_client.o -g -Wall
+	gcc -o testing_stuff/test_client $(Client_dir)/$(OBJ_dir)/test_client.o $(Client_dir)/$(OBJ_dir)/network_client.o
 
 test_server:
 	gcc testing_stuff/test_server.c -c -I $(Server_dir)/$(HEADERS_dir) -o $(Server_dir)/$(OBJ_dir)/test_server.o -g -Wall

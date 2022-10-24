@@ -52,10 +52,11 @@ struct  _MessageT
   MessageT__Opcode opcode;
   MessageT__CType c_type;
   ProtobufCBinaryData data;
+  int32_t debug;
 };
 #define MESSAGE_T__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&message_t__descriptor) \
-    , MESSAGE_T__OPCODE__OP_BAD, MESSAGE_T__C_TYPE__CT_BAD, {0,NULL} }
+    , MESSAGE_T__OPCODE__OP_BAD, MESSAGE_T__C_TYPE__CT_BAD, {0,NULL}, 0 }
 
 
 /* MessageT methods */

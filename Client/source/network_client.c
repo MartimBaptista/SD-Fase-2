@@ -19,7 +19,7 @@ int network_connect(struct rtree_t *rtree){
     }
 
     // Estabelece conexão com o servidor definido na estrutura server
-    if (connect(rtree->client_sockfd,(struct sockaddr *)&rtree->server, sizeof(rtree->server)) < 0) {
+    if (connect(rtree->client_sockfd, rtree->server, sizeof(*rtree->server)) < 0) {
         perror("Erro ao conectar-se ao servidor");
         close(rtree->client_sockfd);
         return -1;
@@ -37,7 +37,7 @@ int read_all(int sock, char *buf, int len){
         int res = read(sock, buf, len);
         if(res<0) {
             if(errno==EINTR) continue;
-            perror("write failed:");
+            perror("read failed:");
             return res;
         }
     buf += res;
@@ -76,8 +76,9 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
 
     int nbytes, answer;
 
-    // Envia string
-    if((nbytes = write(rtree->client_sockfd, rtree->message, sizeof(int))) != sizeof(int)){
+    // Envia o int
+    printf("Args: %d, %d, %d\n", rtree->client_sockfd, rtree->message, sizeof(int)); //TODO remove this
+    if((nbytes = write(rtree->client_sockfd, &rtree->message, sizeof(int))) != sizeof(int)){
         perror("Erro ao enviar dados ao servidor");
         close(rtree->client_sockfd);
         return -1;

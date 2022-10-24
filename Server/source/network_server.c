@@ -1,5 +1,6 @@
 #include "inet.h"
 #include <errno.h>
+#include "sdmessage.pb-c.h"
 
 /* Função para preparar uma socket de receção de pedidos de ligação
  * num determinado porto.
@@ -46,7 +47,7 @@ int read_all(int sock, char *buf, int len){
         int res = read(sock, buf, len);
         if(res<0) {
             if(errno==EINTR) continue;
-            perror("write failed:");
+            perror("read failed:");
             return res;
         }
     buf += res;
@@ -73,6 +74,42 @@ int write_all(int sock, char *buf, int len){
     return bufsize;
 }
 
+
+/* Esta função deve:
+ * - Ler os bytes da rede, a partir do client_socket indicado;
+ * - De-serializar estes bytes e construir a mensagem com o pedido,
+ *   reservando a memória necessária para a estrutura message_t.
+ */
+struct message_t *network_receive(int client_socket){
+    int msg, msg_size;
+
+    if((msg_size = read(client_socket, &msg, MAX_MSG)) < 0){ //Trocar por read_all depois
+		perror("Erro ao receber dados do cliente");
+		close(client_socket);
+	}
+    //De-serialise here
+
+    return msg;
+}
+
+
+/* Esta função deve:
+ * - Serializar a mensagem de resposta contida em msg;
+ * - Libertar a memória ocupada por esta mensagem;
+ * - Enviar a mensagem serializada, através do client_socket.
+ */
+int network_send(int client_socket, struct message_t *msg){
+    int msg_size;
+
+    //serialise here
+    if((msg_size = write(client_socket, &msg, sizeof(msg))) != sizeof(msg)){ //Trocar por write_all depois
+		perror("Erro ao enviar resposta ao cliente");
+    	close(client_socket);
+	}
+    //free memory here
+    return 0;
+}
+
 /* Esta função deve:
  * - Aceitar uma conexão de um cliente;
  * - Receber uma mensagem usando a função network_receive;
@@ -91,28 +128,22 @@ int network_main_loop(int listening_socket){
 
     int connsockfd;
     struct sockaddr_in client;
-    socklen_t size_client;
-    int msg, msg_size;
+    socklen_t size_client = sizeof(client);
+    int msg;
 
     while ((connsockfd = accept(listening_socket,(struct sockaddr *) &client, &size_client)) != -1) {
 
+        printf("Connection established in port: %d\n", connsockfd);
+
 		// For now just gonna read a int and send it + 1 back (just to see if all else is working)
 
-		if((msg_size = read(connsockfd, msg, MAX_MSG)) < 0){ //Trocar por read_all depois
-			perror("Erro ao receber dados do cliente");
-			close(connsockfd);
-			continue;
-		}
+		msg = (int)network_receive(connsockfd);
 		
         printf("Recieved: %d", msg);
         msg++;
         printf("Sending: %d", msg);
-		
-		if((msg_size = write(connsockfd, &msg, sizeof(msg))) != sizeof(msg)){ //Trocar por write_all depois
-			perror("Erro ao enviar resposta ao cliente");
-			close(connsockfd);
-			continue;
-		}
+
+        network_send(connsockfd, msg);
 
 		// Fecha socket referente a esta conexão
 		close(connsockfd);
@@ -120,24 +151,9 @@ int network_main_loop(int listening_socket){
 
 }
 
-/* Esta função deve:
- * - Ler os bytes da rede, a partir do client_socket indicado;
- * - De-serializar estes bytes e construir a mensagem com o pedido,
- *   reservando a memória necessária para a estrutura message_t.
- */
-struct message_t *network_receive(int client_socket){
-
-}
-
-
-/* Esta função deve:
- * - Serializar a mensagem de resposta contida em msg;
- * - Libertar a memória ocupada por esta mensagem;
- * - Enviar a mensagem serializada, através do client_socket.
- */
-int network_send(int client_socket, struct message_t *msg);
-
 /* A função network_server_close() liberta os recursos alocados por
  * network_server_init().
  */
-int network_server_close();
+int network_server_close(){
+    return 0;
+}

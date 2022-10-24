@@ -28,4 +28,5 @@ message message_t
 
         bytes data = 3;
 
+        int32 debug = 4;
 };
