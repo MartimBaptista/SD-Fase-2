@@ -75,11 +75,11 @@ int write_all(int sock, char *buf, int len){
 struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t *msg){
 
     int msg_size, answer_size;
-    char* answer;
+    char* answer; //TODO cahnge this
 
     //SENDING REQUEST
 
-    msg_size = sizeof(char) * (strlen(msg) + 1); //switch this for protobuf get pakage size
+    msg_size = sizeof(char) * (strlen(msg) + 1); //TODO switch this for protobuf get pakage size
 
     if(write_all(rtree->client_sockfd, &msg_size, sizeof(int)) < 0){
         perror("Erro ao enviar tamanho dos dados ao servidor");
@@ -87,7 +87,7 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
         return -1;
     }
 
-    printf("---Reported size: %d---\n", msg_size);
+    printf("---Reported size: %d---\n", msg_size); //TODO REMOVE
 
     if(write_all(rtree->client_sockfd, msg, msg_size) < 0){
         perror("Erro ao enviar dados ao servidor");
@@ -104,7 +104,7 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
         return -1;
     }
 
-    printf("---Expected size: %d---\n", answer_size);
+    printf("---Expected size: %d---\n", answer_size); //TODO REMOVE
 
     answer = malloc(answer_size);
 
