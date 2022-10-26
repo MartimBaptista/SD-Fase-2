@@ -11,7 +11,7 @@ tree-server:
 	#TODO
 
 tree-client:
-	#TODO
+	gcc $(Client_dir)/source/tree_client.c -o $(Client_dir)/binary/tree-client -g -Wall -I $(Client_dir)/$(HEADERS_dir)
 
 
 tree.o:
