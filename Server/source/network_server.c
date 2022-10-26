@@ -1,5 +1,6 @@
 #include "inet.h"
 #include <errno.h>
+#include <stdlib.h>
 #include "sdmessage.pb-c.h"
 
 /* Função para preparar uma socket de receção de pedidos de ligação

@@ -1,5 +1,6 @@
 #include "inet.h"
 #include <errno.h>
+#include <stdlib.h>
 #include "client_stub-private.h"
 
 /* Esta função deve:
