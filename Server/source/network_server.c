@@ -81,16 +81,19 @@ int write_all(int sock, char *buf, int len){
  *   reservando a memória necessária para a estrutura message_t.
  */
 struct message_t *network_receive(int client_socket){
-    int msg, msg_size;
+    int msg_size;
+    char* msg;
 
     if(read_all(client_socket, &msg_size, sizeof(int)) < 0){
 		perror("Erro ao receber tamnaho dos dados do cliente");
 		close(client_socket);
     }
 
-    printf("---Expecting message of size: %d---\n", msg_size);
+    printf("---Expeced size: %d---\n", msg_size);
 
-    if(read_all(client_socket, &msg, msg_size) < 0){
+    msg = malloc(msg_size);
+
+    if(read_all(client_socket, msg, msg_size) < 0){
 		perror("Erro ao receber dados do cliente");
 		close(client_socket);
     }
@@ -111,19 +114,23 @@ int network_send(int client_socket, struct message_t *msg){
 
     //TODO serialise here
 
-    msg_size = sizeof(int); //switch this for protobuf get pakage size
+    msg_size = sizeof(char) * (strlen(msg) + 1); //switch this for protobuf get pakage size
 
     if(write_all(client_socket, &msg_size, sizeof(int)) < 0){
         perror("Erro ao enviar tamanho da resposta ao cliente");
         close(client_socket);
     }
 
-    if(write_all(client_socket, &msg, msg_size) < 0){
+    printf("---Reported size: %d---\n", msg_size);
+
+    if(write_all(client_socket, msg, msg_size) < 0){
         perror("Erro ao enviar resposta ao cliente");
     	close(client_socket);
     }
     
     //free memory here
+    free(msg);
+
     return 0;
 }
 
@@ -143,39 +150,50 @@ int network_main_loop(int listening_socket){
         //call network_send(return from invoke())
     //}
 
-    int connsockfd;
+    int connsockfd, connected;
     struct sockaddr_in client;
     socklen_t size_client = sizeof(client);
-    int msg; //TODO Change this type
+    char* msg; //TODO Change this type
 
-    printf("Server listening...\n");
-
-    while ((connsockfd = accept(listening_socket,(struct sockaddr *) &client, &size_client)) != -1) {
+    while(1){
+        printf("Server listening...\n");
+        if ((connsockfd = accept(listening_socket,(struct sockaddr *) &client, &size_client)) < 0) {
+            perror("Erro ao aceitar o cliente");
+        	close(connsockfd);
+            return(-1);
+        }
 
         printf("Connection established in port: %d\n", connsockfd);
-
-		msg = (int)network_receive(connsockfd);
-
-        //-----DEBUG TO BE REMOVED-----
-		// For now just gonna read a int and send it + 1 back (just to see if all else is working)
+        connected = 1;
 
 
-		
-        printf("Recieved: %d\n", msg);
-        msg++;
-        printf("Sending: %d\n", msg);
-        
+        while (connected) {
 
+    		msg = (char*)network_receive(connsockfd);
 
-        //-----UNTIL HERE-----
+            //-----DEBUG TO BE CHANGED-----
 
-        network_send(connsockfd, msg);
+            if(strcmp(msg, "close") == 0){
+                // Fecha socket referente a esta conexão
+                free(msg);
+                msg = malloc(strlen("closing") + 1);
+                strcpy(msg, "closing");
+                network_send(connsockfd, msg);
+    		    close(connsockfd);
+                connected = 0;
+                printf("Closed connection with port: %d\n\n", connsockfd);
+            }
+            else{
+                printf("Recieved: %s\n", msg);
+                msg[0] = toupper(msg[0]);
+                printf("Sending: %s\n", msg);
 
-		// Fecha socket referente a esta conexão
-		close(connsockfd);
-        printf("Closed connection with port: %d\n\n", connsockfd);
+                //-----UNTIL HERE-----
+
+                network_send(connsockfd, msg);
+            }
+        }
     }
-
 }
 
 /* A função network_server_close() liberta os recursos alocados por

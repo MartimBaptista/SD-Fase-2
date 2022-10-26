@@ -4,7 +4,6 @@
 int main(int argc, char const *argv[]){
     
     int listening_socket = network_server_init(12345);
-    printf("Server Listening...\n");
 
     network_main_loop(listening_socket);
 

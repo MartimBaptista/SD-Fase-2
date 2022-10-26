@@ -13,11 +13,39 @@ main(int argc, char const *argv[]){
         return -1;
     }
 
+    char* answer;
+
     network_connect(rtree);
 
+    /*
     rtree->message = 10;
-    int answer = network_send_receive(rtree, NULL);
-    printf("Sent: %d; Rceived: %d", rtree->message, answer);
+    answer = network_send_receive(rtree, NULL);
+    printf("Sent: %d; Rceived: %d\n", rtree->message, answer);
+
+    rtree->message = 99;
+    answer = network_send_receive(rtree, NULL);
+    printf("Sent: %d; Rceived: %d\n", rtree->message, answer);
+
+    rtree->message = 23;
+    answer = network_send_receive(rtree, NULL);
+    printf("Sent: %d; Rceived: %d\n", rtree->message, answer);
+
+    rtree->message = 77;
+    answer = network_send_receive(rtree, NULL);
+    printf("Sent: %d; Rceived: %d\n", rtree->message, answer);
+    */
+
+    char *msg;
+    
+    msg = "yo";
+    answer = network_send_receive(rtree, msg);
+    printf("Sent: %s; Rceived: %s\n", msg, answer);
+    free(answer);
+
+    msg = "close";
+    answer = network_send_receive(rtree, msg);
+    printf("Sent: %s; Rceived: %s\n", msg, answer);
+    free(answer);
 
     network_close(rtree);
     free(rtree->server);
