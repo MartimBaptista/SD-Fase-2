@@ -82,7 +82,7 @@ int write_all(int sock, char *buf, int len){
  */
 struct message_t *network_receive(int client_socket){
     int msg_size;
-    char* msg;
+    char* msg; //TODO change this
 
     if(read_all(client_socket, &msg_size, sizeof(int)) < 0){
 		perror("Erro ao receber tamnaho dos dados do cliente");
@@ -114,7 +114,7 @@ int network_send(int client_socket, struct message_t *msg){
 
     //TODO serialise here
 
-    msg_size = sizeof(char) * (strlen(msg) + 1); //switch this for protobuf get pakage size
+    msg_size = sizeof(char) * (strlen(msg) + 1); //TODO switch this for protobuf get pakage size
 
     if(write_all(client_socket, &msg_size, sizeof(int)) < 0){
         perror("Erro ao enviar tamanho da resposta ao cliente");
@@ -128,7 +128,7 @@ int network_send(int client_socket, struct message_t *msg){
     	close(client_socket);
     }
     
-    //free memory here
+    //TODO free memory here
     free(msg);
 
     return 0;
@@ -168,10 +168,9 @@ int network_main_loop(int listening_socket){
 
 
         while (connected) {
+            //-----DEBUG TO BE CHANGED----- TODO
 
     		msg = (char*)network_receive(connsockfd);
-
-            //-----DEBUG TO BE CHANGED-----
 
             if(strcmp(msg, "close") == 0){
                 // Fecha socket referente a esta conexão
@@ -187,11 +186,9 @@ int network_main_loop(int listening_socket){
                 printf("Recieved: %s\n", msg);
                 msg[0] = toupper(msg[0]);
                 printf("Sending: %s\n", msg);
-
-                //-----UNTIL HERE-----
-
                 network_send(connsockfd, msg);
             }
+            //-----UNTIL HERE----- TODO
         }
     }
 }
