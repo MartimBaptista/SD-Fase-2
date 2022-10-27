@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include "client_stub-private.h"
+#include "message.h"
 
 /* Esta função deve:
  * - Obter o endereço do servidor (struct sockaddr_in) a base da
@@ -75,24 +76,22 @@ int write_all(int sock, char *buf, int len){
  */
 struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t *msg){
 
-    int msg_size, answer_size;
-    char* answer; //TODO cahnge this
+    int size = message_t__get_packed_size(&msg->message);
+    int size_n = htonl(size);
+
+    uint8_t *buf = malloc(size);
+    message_t__pack(&msg->message,buf);
 
     //SENDING REQUEST
 
-    //TODO serialise here
-
-    msg_size = sizeof(char) * (strlen(msg) + 1); //TODO switch this for protobuf get pakage size
-
-    if(write_all(rtree->client_sockfd, &msg_size, sizeof(int)) < 0){
+    if(write_all(rtree->client_sockfd, &size_n, sizeof(int)) < 0){
         perror("Erro ao enviar tamanho dos dados ao servidor");
         close(rtree->client_sockfd);
         return -1;
     }
 
-    printf("---Reported size: %d---\n", msg_size); //TODO REMOVE
 
-    if(write_all(rtree->client_sockfd, msg, msg_size) < 0){
+    if(write_all(rtree->client_sockfd, buf, size_n) < 0){
         perror("Erro ao enviar dados ao servidor");
         close(rtree->client_sockfd);
         return -1;
@@ -100,26 +99,33 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
 
 
     //RECEIVING ANSWER
+    int size_r;
 
-    if(read_all(rtree->client_sockfd, &answer_size, sizeof(int)) < 0){
+    if(read_all(rtree->client_sockfd, &size_r, sizeof(int)) < 0){
 		perror("Erro ao receber tamanho dos dados do servidor");
 		close(rtree->client_sockfd);
         return -1;
     }
 
-    printf("---Expected size: %d---\n", answer_size); //TODO REMOVE
+    size_r = ntohl(size_r);
+    uint8_t buf_r[size_r];
 
-    answer = malloc(answer_size);
-
-    if(read_all(rtree->client_sockfd, answer, answer_size) < 0){
+    if(read_all(rtree->client_sockfd, buf_r, size_r) < 0){
         perror("Erro ao receber dados do servidor");
         close(rtree->client_sockfd);
         return -1;
     }
 
-    //TODO De-serialise here
+    MessageT *aux = message_t__unpack(NULL, size_r, buf_r);
 
-    return answer;
+    struct message_t *res = (struct message_t * ) malloc(sizeof(struct message_t));
+    message_t__init(&res->message);
+
+    if(res == NULL)
+        return NULL;
+
+    res->message = *aux;
+    return res;
 }
 
 /* A função network_close() fecha a ligação estabelecida por
