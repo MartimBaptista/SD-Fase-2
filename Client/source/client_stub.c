@@ -11,9 +11,16 @@ struct rtree_t;
  */
 struct rtree_t *rtree_connect(const char *address_port) {
     struct rtree_t *rtree = malloc(sizeof(rtree));
+    rtree->server = malloc(sizeof(struct sockaddr_in));
+    char* ip = strtok(address_port, ":");
+    char* port = atoi(strtok(NULL, ":"));
 
-    rtree->server->sin_addr.s_addr = strtok(address_port, ":");
-    rtree->server->sin_port = strtok(NULL, ":");
+    rtree->server->sin_family = AF_INET; // família de endereços
+    if (inet_pton(AF_INET, ip, &rtree->server->sin_addr) < 1) { // Endereço IP
+        printf("Erro ao converter IP\n");
+        return -1;
+    }
+    rtree->server->sin_port = htons(port); // Porta TCP
     
     return network_connect(rtree) == 0? rtree : NULL;
 }

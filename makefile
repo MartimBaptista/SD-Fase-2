@@ -18,11 +18,19 @@ tree-client:
 	gcc $(Client_dir)/source/sdmessage.pb-c.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/sdmessage.pb-c.o -g -Wall
 	gcc $(Client_dir)/source/entry.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/entry.o -g -Wall
 	gcc $(Client_dir)/source/data.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/data.o -g -Wall
-	cp $(Client_dir)/extra_obj/tree.o.extra $(Client_dir)/$(OBJ_dir)/tree.o
 
-	gcc $(Client_dir)/$(OBJ_dir)/entry.o $(Client_dir)/$(OBJ_dir)/data.o $(Client_dir)/$(OBJ_dir)/tree-client.o $(Client_dir)/$(OBJ_dir)/client_stub.o $(Client_dir)/$(OBJ_dir)/network_client.o $(Client_dir)/$(OBJ_dir)/sdmessage.pb-c.o -o $(Client_dir)/binary/tree-client
+	gcc $(Client_dir)/$(OBJ_dir)/entry.o $(Client_dir)/$(OBJ_dir)/data.o $(Client_dir)/$(OBJ_dir)/tree-client.o $(Client_dir)/$(OBJ_dir)/client_stub.o $(Client_dir)/$(OBJ_dir)/network_client.o $(Client_dir)/$(OBJ_dir)/sdmessage.pb-c.o -lprotobuf-c -o $(Client_dir)/binary/tree-client
 
+tree-server:
+	gcc $(Server_dir)/source/tree_server.c -c -I $(Server_dir)/$(HEADERS_dir) -o $(Server_dir)/$(OBJ_dir)/tree-server.o -g -Wall
+	gcc $(Server_dir)/source/tree_skel.c -c -I $(Server_dir)/$(HEADERS_dir) -o $(Server_dir)/$(OBJ_dir)/tree_skel.o -g -Wall
+	gcc $(Server_dir)/source/network_server.c -c -I $(Server_dir)/$(HEADERS_dir) -o $(Server_dir)/$(OBJ_dir)/network_server.o -g -Wall
+	gcc $(Server_dir)/source/sdmessage.pb-c.c -c -I $(Server_dir)/$(HEADERS_dir) -o $(Server_dir)/$(OBJ_dir)/sdmessage.pb-c.o -g -Wall
+	gcc $(Server_dir)/source/entry.c -c -I $(Server_dir)/$(HEADERS_dir) -o $(Server_dir)/$(OBJ_dir)/entry.o -g -Wall
+	gcc $(Server_dir)/source/data.c -c -I $(Server_dir)/$(HEADERS_dir) -o $(Server_dir)/$(OBJ_dir)/data.o -g -Wall
+	cp $(Server_dir)/extra_obj/tree.o.extra $(Server_dir)/$(OBJ_dir)/tree.o
 
+	gcc $(Server_dir)/$(OBJ_dir)/entry.o $(Server_dir)/$(OBJ_dir)/data.o $(Server_dir)/$(OBJ_dir)/tree.o $(Server_dir)/$(OBJ_dir)/tree-server.o $(Server_dir)/$(OBJ_dir)/tree_skel.o $(Server_dir)/$(OBJ_dir)/network_server.o $(Server_dir)/$(OBJ_dir)/sdmessage.pb-c.o -lprotobuf-c -o $(Server_dir)/binary/tree-server
 
 tree.o:
 	cp extra_object/tree.o.extra $(OBJ_dir)/tree.o

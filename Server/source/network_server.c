@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "sdmessage.pb-c.h"
 #include "message.h"
+#include "tree_skel.h"
 
 /* Função para preparar uma socket de receção de pedidos de ligação
  * num determinado porto.
@@ -15,6 +16,17 @@ int network_server_init(short port){
     // Cria socket TCP
     if ((listening_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
         perror("Erro ao criar socket");
+        return -1;
+    }
+
+    // Fazer com que possa ser reutilisado
+    const int enable = 1;
+    if (setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0){
+        perror("Erro no Setsockopt(SO_REUSEADDR):");
+        return -1;
+    }
+    if (setsockopt(listening_socket, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0){
+        perror("Erro no Setsockopt(SO_REUSEPORT):");
         return -1;
     }
 
@@ -152,10 +164,10 @@ int network_main_loop(int listening_socket){
         //call network_send(return from invoke())
     //}
 
-    int connsockfd, connected;
+    int connsockfd;
     struct sockaddr_in client;
     socklen_t size_client = sizeof(client);
-    char* msg; //TODO Change this type
+    struct message_t *msg;
 
     while(1){
         printf("Server listening...\n");
@@ -166,31 +178,13 @@ int network_main_loop(int listening_socket){
         }
 
         printf("Connection established in port: %d\n", connsockfd);
-        connected = 1;
 
+        while (1) { //TODO While connected, but how
+    		msg = network_receive(connsockfd);
+            
+            invoke(msg); //TODO error check here?
 
-        while (connected) {
-            //-----DEBUG TO BE CHANGED----- TODO
-
-    		msg = (char*)network_receive(connsockfd);
-
-            if(strcmp(msg, "close") == 0){
-                // Fecha socket referente a esta conexão
-                free(msg);
-                msg = malloc(strlen("closing") + 1);
-                strcpy(msg, "closing");
-                network_send(connsockfd, msg);
-    		    close(connsockfd);
-                connected = 0;
-                printf("Closed connection with port: %d\n\n", connsockfd);
-            }
-            else{
-                printf("Recieved: %s\n", msg);
-                msg[0] = toupper(msg[0]);
-                printf("Sending: %s\n", msg);
-                network_send(connsockfd, msg);
-            }
-            //-----UNTIL HERE----- TODO
+            network_send(connsockfd, msg);
         }
     }
 }

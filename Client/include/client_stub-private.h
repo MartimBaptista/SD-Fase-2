@@ -2,8 +2,6 @@
 #include "network_client.h"
 #include "tree.h"
 #include "data.h"
-// #include "testing_stuff/sdmessage.pb-c.h"
-
 #include "sdmessage.pb-c.h"
 
 #include <stdio.h>

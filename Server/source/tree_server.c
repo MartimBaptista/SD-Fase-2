@@ -10,9 +10,11 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    int listening_socket = atoi(argv[1]);
+    int listening_socket_port = atoi(argv[1]);
 
-    network_main_loop(listening_socket);
+    int listening_socket_fd = network_server_init(listening_socket_port);
+
+    network_main_loop(listening_socket_fd);
 
     return 0;
 }

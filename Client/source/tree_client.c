@@ -20,9 +20,10 @@ int main(int argc, char *argv[]){
     struct rtree_t *rtree;
     
     if(rtree = rtree_connect(argv[1]) == NULL){
-        perror("Error connecting to server: ");
         return(-1);
     }
+
+    printf("Connected to server.");
 
     const char s[2] = " ";
     const char f[2] = "\0";
