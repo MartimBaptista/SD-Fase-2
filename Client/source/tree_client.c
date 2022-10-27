@@ -1,7 +1,10 @@
 #include "client_stub.h"
+#include "client_stub-private.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define BUFFERSIZE 500
 
 int main(int argc, char *argv[]){
     /*
@@ -15,11 +18,6 @@ int main(int argc, char *argv[]){
         getvalues 
         quit
     Use:
-        fgets()
-        strtok()
-        struct rtree_t *rtree_connect(const char *address_port);
-        int rtree_disconnect(struct rtree_t *rtree);
-        int rtree_put(struct rtree_t *rtree, struct entry_t *entry);
         struct data_t *rtree_get(struct rtree_t *rtree, char *key);
         int rtree_del(struct rtree_t *rtree, char *key);
         int rtree_size(struct rtree_t *rtree);
@@ -34,22 +32,95 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    char* command;// = malloc(16);
-    char* key;// = malloc(51);
-    char* data;// = malloc(51);
-    //const char s[2] = " ";
+    struct rtree_t *rtree = rtree_connect(argv[1]);
 
-    //fflush(stdin);
-    //fgets(input, strlen(input) + 1, stdin);
-    //command = strtok(input, s);
+    int running = 1;
+    char input[BUFFERSIZE];
+    char *command, *key, *data;
+    const char s[2] = " ";
+    const char f[2] = "\0";
+    while (running){
+        char input[BUFFERSIZE];
+        char *command, *key_s, *data_s;
 
-    //TODO try to use fgets later, it doesnt block for some reason
+        //Obtaining input
+        fflush(stdin);
+        fgets(input, BUFFERSIZE, stdin);
 
-    scanf("%s", command);
-    printf("%s", command);
+        //Spliting Input into its components
+        command = strtok(input, s);
+        printf("Command: %s\n", command); //TODO remove this
+        key_s = strtok(NULL, s);
+        printf("Key: %s\n", key_s); //TODO remove this
+        data_s = strtok(NULL, f);
+        printf("Data: %s\n", data_s); //TODO remove this
 
-    if(strcmp(command, "put")){
-        //TODO...
+        //Chcking the input and calling tree_stub
+
+        if(strcmp(command, "put") == 0){
+            //Checking for key
+            if(key == NULL){
+                printf("Missing key.\n");
+                continue;
+            }
+
+            //Checking for data
+            if(key == NULL){
+                printf("Missing data.\n");
+                continue;
+            }
+
+            //Building data
+            struct data_t *data;
+            data->datasize = strlen(data_s) + 1;
+            strcpy(data->data, data_s);
+
+            //Building entry
+            struct entry_t *entry;
+            strcpy(entry->key, key_s);
+            entry->value = data;
+
+            //Putting in tree
+            if(rtree_put(rtree, entry) < 0){
+                perror("Error on put:");
+                break;
+            }
+        }
+        else if(strcmp(command, "get") == 0){
+            //Checking for key
+            if(key == NULL){
+                printf("Missing key.\n");
+                continue;
+            }
+
+        struct data_t *data = rtree_get(rtree, key_s);
+        //CONTINUE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        }
+        else if(strcmp(command, "del") == 0){
+            //TODO...
+        }
+        else if(strcmp(command, "size") == 0){
+            //TODO...
+        }
+        else if(strcmp(command, "height") == 0){
+            //TODO...
+        }
+        else if(strcmp(command, "getkeys") == 0){
+            //TODO...
+        }
+        else if(strcmp(command, "getvalues") == 0){
+            //TODO...
+        }
+        else if(strcmp(command, "quit") == 0){
+            if(rtree_disconnect(rtree) == 0){
+
+            }
+            printf("TODO");
+        }
+        else{
+            printf("what?\n");
+        }
     }
     //TODO
     return 0;
