@@ -2,12 +2,10 @@
 #include "tree.h"
 #include <stdlib.h>
 #include <string.h>
+#include "message.h"
 
 struct tree_t *tree;
 
-struct message_t {
-    MessageT message;
-};
 
 /* Inicia o skeleton da árvore.
  * O main() do servidor deve chamar esta função antes de poder usar a
