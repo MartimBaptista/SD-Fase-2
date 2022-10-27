@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include "sdmessage.pb-c.h"
+#include "message.h"
 
 /* Função para preparar uma socket de receção de pedidos de ligação
  * num determinado porto.
@@ -82,26 +83,28 @@ int write_all(int sock, char *buf, int len){
  *   reservando a memória necessária para a estrutura message_t.
  */
 struct message_t *network_receive(int client_socket){
-    int msg_size;
-    char* msg; //TODO change this
+    struct message_t *res = (struct message_t * ) malloc(sizeof(struct message_t));
+    message_t__init(&res->message);
 
-    if(read_all(client_socket, &msg_size, sizeof(int)) < 0){
+    int size;
+
+    if(read_all(client_socket, &size, sizeof(int)) < 0){
 		perror("Erro ao receber tamnaho dos dados do cliente");
 		close(client_socket);
     }
 
-    printf("---Expeced size: %d---\n", msg_size);
+    size = ntohl(size);
+    uint8_t buf [size];
 
-    msg = malloc(msg_size);
-
-    if(read_all(client_socket, msg, msg_size) < 0){
+    if(read_all(client_socket, buf, size) < 0){
 		perror("Erro ao receber dados do cliente");
 		close(client_socket);
     }
 
-    //TODO De-serialise here
+    MessageT *aux = message_t__unpack(NULL, size, buf);
+    res->message = *aux;
 
-    return msg;
+    return res;
 }
 
 
@@ -111,26 +114,24 @@ struct message_t *network_receive(int client_socket){
  * - Enviar a mensagem serializada, através do client_socket.
  */
 int network_send(int client_socket, struct message_t *msg){
-    int msg_size;
 
-    //TODO serialise here
+    int size = message_t__get_packed_size(&msg->message);
+    int size_n = htonl(size);
 
-    msg_size = sizeof(char) * (strlen(msg) + 1); //TODO switch this for protobuf get pakage size
+    uint8_t *buf = malloc(size);
+    message_t__pack(&msg->message,buf);   
 
-    if(write_all(client_socket, &msg_size, sizeof(int)) < 0){
+    if(write_all(client_socket, &size_n, sizeof(int)) < 0){
         perror("Erro ao enviar tamanho da resposta ao cliente");
         close(client_socket);
     }
 
-    printf("---Reported size: %d---\n", msg_size);
-
-    if(write_all(client_socket, msg, msg_size) < 0){
+    if(write_all(client_socket, buf, size) < 0){
         perror("Erro ao enviar resposta ao cliente");
     	close(client_socket);
     }
     
-    //TODO free memory here
-    free(msg);
+
 
     return 0;
 }
