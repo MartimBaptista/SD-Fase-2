@@ -1,6 +1,10 @@
 syntax = "proto3";
 message message_t
- {   
+ {      
+        message Entry {
+                string key = 1;
+                bytes data = 2;
+        }
         Entry entry = 1;
         repeated Entry entries = 2;
 
@@ -36,7 +40,3 @@ message message_t
 
 }
 
-message Entry {
-        string key = 1;
-        bytes data = 2;
-}

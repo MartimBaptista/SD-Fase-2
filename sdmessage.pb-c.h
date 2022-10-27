@@ -16,7 +16,7 @@ PROTOBUF_C__BEGIN_DECLS
 
 
 typedef struct _MessageT MessageT;
-typedef struct _Entry Entry;
+typedef struct _MessageT__Entry MessageT__Entry;
 
 
 /* --- enums --- */
@@ -47,12 +47,23 @@ typedef enum _MessageT__CType {
 
 /* --- messages --- */
 
+struct  _MessageT__Entry
+{
+  ProtobufCMessage base;
+  char *key;
+  ProtobufCBinaryData data;
+};
+#define MESSAGE_T__ENTRY__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&message_t__entry__descriptor) \
+    , (char *)protobuf_c_empty_string, {0,NULL} }
+
+
 struct  _MessageT
 {
   ProtobufCMessage base;
-  Entry *entry;
+  MessageT__Entry *entry;
   size_t n_entries;
-  Entry **entries;
+  MessageT__Entry **entries;
   int32_t size;
   MessageT__Opcode opcode;
   MessageT__CType c_type;
@@ -64,17 +75,9 @@ struct  _MessageT
     , NULL, 0,NULL, 0, MESSAGE_T__OPCODE__OP_BAD, MESSAGE_T__C_TYPE__CT_BAD, 0,NULL }
 
 
-struct  _Entry
-{
-  ProtobufCMessage base;
-  char *key;
-  ProtobufCBinaryData data;
-};
-#define ENTRY__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&entry__descriptor) \
-    , (char *)protobuf_c_empty_string, {0,NULL} }
-
-
+/* MessageT__Entry methods */
+void   message_t__entry__init
+                     (MessageT__Entry         *message);
 /* MessageT methods */
 void   message_t__init
                      (MessageT         *message);
@@ -94,32 +97,13 @@ MessageT *
 void   message_t__free_unpacked
                      (MessageT *message,
                       ProtobufCAllocator *allocator);
-/* Entry methods */
-void   entry__init
-                     (Entry         *message);
-size_t entry__get_packed_size
-                     (const Entry   *message);
-size_t entry__pack
-                     (const Entry   *message,
-                      uint8_t             *out);
-size_t entry__pack_to_buffer
-                     (const Entry   *message,
-                      ProtobufCBuffer     *buffer);
-Entry *
-       entry__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   entry__free_unpacked
-                     (Entry *message,
-                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
+typedef void (*MessageT__Entry_Closure)
+                 (const MessageT__Entry *message,
+                  void *closure_data);
 typedef void (*MessageT_Closure)
                  (const MessageT *message,
-                  void *closure_data);
-typedef void (*Entry_Closure)
-                 (const Entry *message,
                   void *closure_data);
 
 /* --- services --- */
@@ -128,9 +112,9 @@ typedef void (*Entry_Closure)
 /* --- descriptors --- */
 
 extern const ProtobufCMessageDescriptor message_t__descriptor;
+extern const ProtobufCMessageDescriptor message_t__entry__descriptor;
 extern const ProtobufCEnumDescriptor    message_t__opcode__descriptor;
 extern const ProtobufCEnumDescriptor    message_t__c_type__descriptor;
-extern const ProtobufCMessageDescriptor entry__descriptor;
 
 PROTOBUF_C__END_DECLS
 
