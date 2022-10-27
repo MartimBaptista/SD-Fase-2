@@ -62,8 +62,8 @@ struct  _MessageT
 {
   ProtobufCMessage base;
   MessageT__Entry *entry;
-  size_t n_entries;
-  MessageT__Entry **entries;
+  size_t n_values;
+  ProtobufCBinaryData *values;
   int32_t size;
   MessageT__Opcode opcode;
   MessageT__CType c_type;

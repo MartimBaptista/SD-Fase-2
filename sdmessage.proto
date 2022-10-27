@@ -6,7 +6,8 @@ message message_t
                 bytes data = 2;
         }
         Entry entry = 1;
-        repeated Entry entries = 2;
+        repeated bytes values = 2;
+
 
         int32 size = 3;
 

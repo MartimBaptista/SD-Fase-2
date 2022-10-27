@@ -206,13 +206,13 @@ static const ProtobufCFieldDescriptor message_t__field_descriptors[6] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "entries",
+    "values",
     2,
     PROTOBUF_C_LABEL_REPEATED,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(MessageT, n_entries),
-    offsetof(MessageT, entries),
-    &message_t__entry__descriptor,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(MessageT, n_values),
+    offsetof(MessageT, values),
+    NULL,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -268,11 +268,11 @@ static const ProtobufCFieldDescriptor message_t__field_descriptors[6] =
 };
 static const unsigned message_t__field_indices_by_name[] = {
   4,   /* field[4] = c_type */
-  1,   /* field[1] = entries */
   0,   /* field[0] = entry */
   5,   /* field[5] = keys */
   3,   /* field[3] = opcode */
   2,   /* field[2] = size */
+  1,   /* field[1] = values */
 };
 static const ProtobufCIntRange message_t__number_ranges[1 + 1] =
 {
