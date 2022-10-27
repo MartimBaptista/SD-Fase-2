@@ -11,7 +11,11 @@ tree-server:
 	#TODO
 
 tree-client:
-	gcc $(Client_dir)/source/tree_client.c -o $(Client_dir)/binary/tree-client -g -Wall -I $(Client_dir)/$(HEADERS_dir)
+#cd $(Client_dir)
+	gcc $(Client_dir)/source/entry.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/entry.o -g -Wall
+	gcc $(Client_dir)/source/data.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/data.o -g -Wall
+	gcc $(Client_dir)/source/tree_client.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/tree-client.o -g -Wall
+	gcc $(Client_dir)/$(OBJ_dir)/entry.o $(Client_dir)/$(OBJ_dir)/data.o $(Client_dir)/$(OBJ_dir)/tree-client.o -o $(Client_dir)/binary/tree-client
 
 
 tree.o:
