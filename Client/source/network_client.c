@@ -80,6 +80,8 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
 
     //SENDING REQUEST
 
+    //TODO serialise here
+
     msg_size = sizeof(char) * (strlen(msg) + 1); //TODO switch this for protobuf get pakage size
 
     if(write_all(rtree->client_sockfd, &msg_size, sizeof(int)) < 0){
@@ -114,6 +116,8 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
         close(rtree->client_sockfd);
         return -1;
     }
+
+    //TODO De-serialise here
 
     return answer;
 }
