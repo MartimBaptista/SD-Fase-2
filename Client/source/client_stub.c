@@ -12,8 +12,8 @@ struct rtree_t;
 struct rtree_t *rtree_connect(const char *address_port) {
     struct rtree_t *rtree = malloc(sizeof(rtree));
 
-    rtree->server.sin_addr.s_addr = strtok(address_port, ":");
-    rtree->server.sin_port = strtok(NULL, ":");
+    rtree->server->sin_addr.s_addr = strtok(address_port, ":");
+    rtree->server->sin_port = strtok(NULL, ":");
     
     return network_connect(rtree) == 0? rtree : NULL;
 }
@@ -41,7 +41,9 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry) {
     msg->opcode = MESSAGE_T__OPCODE__OP_PUT;
     msg->c_type = MESSAGE_T__C_TYPE__CT_ENTRY;
     msg->entry->key = entry->key;
-    msg->entry->data = entry->value;
+
+    msg->entry->data.len = entry->value->datasize;
+    memcpy(msg->entry->data.data, entry->value->data, entry->value->datasize);
 
     MessageT *answer = network_send_receive(rtree, msg);
 
@@ -71,9 +73,9 @@ struct data_t *rtree_get(struct rtree_t *rtree, char *key) {
 
     if (answer->opcode == MESSAGE_T__OPCODE__OP_GET + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_VALUE)
     {
-        struct data_t *ret = data_create(answer->entry->data->datasize);
+        struct data_t *ret = data_create(answer->entry->data.len);
 
-        memcpy(ret->data, answer->entry->data->data.data, ret->datasize);     
+        memcpy(ret->data, answer->entry->data.data, ret->datasize);     
 
         return ret;
     }
@@ -169,15 +171,15 @@ char **rtree_get_keys(struct rtree_t *rtree) {
         return NULL;
     }
     
-    int n_keys = answer->n_entries;
+    int n_keys = answer->n_keys;
     char **ret;
 
     ret = malloc(sizeof(char *) * n_keys);
 
     for (size_t i = 0; i < n_keys; i++) 
     {
-        ret[i] = malloc(strlen(answer->entries[i]) + 1);
-        strcpy(ret[i], answer->entries[i]);
+        ret[i] = malloc(strlen(answer->keys[i]) + 1);
+        strcpy(ret[i], answer->keys[i]);
     }
 
     return ret;    
@@ -212,10 +214,10 @@ void **rtree_get_values(struct rtree_t *rtree) {
         ret[i] = malloc(sizeof(struct data_t));
 
         
-        ret[i]->datasize = answer->values[i]->datasize;
+        ret[i]->datasize = answer->values[i].len;
         
         ret[i]->data = malloc(ret[i]->datasize);
-        memcpy(ret[i]->data, answer->values[i]->data.data, ret[i]->datasize);
+        memcpy(ret[i]->data, answer->values[i].data, ret[i]->datasize);
     }
 
     return ret;
