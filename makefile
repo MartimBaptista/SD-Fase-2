@@ -12,10 +12,16 @@ tree-server:
 
 tree-client:
 #cd $(Client_dir)
+	gcc $(Client_dir)/source/tree_client.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/tree-client.o -g -Wall
+	gcc $(Client_dir)/source/client_stub.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/client_stub.o -g -Wall
+	gcc $(Client_dir)/source/network_client.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/network_client.o -g -Wall
+	gcc $(Client_dir)/source/sdmessage.pb-c.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/sdmessage.pb-c.o -g -Wall
 	gcc $(Client_dir)/source/entry.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/entry.o -g -Wall
 	gcc $(Client_dir)/source/data.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/data.o -g -Wall
-	gcc $(Client_dir)/source/tree_client.c -c -I $(Client_dir)/$(HEADERS_dir) -o $(Client_dir)/$(OBJ_dir)/tree-client.o -g -Wall
-	gcc $(Client_dir)/$(OBJ_dir)/entry.o $(Client_dir)/$(OBJ_dir)/data.o $(Client_dir)/$(OBJ_dir)/tree-client.o -o $(Client_dir)/binary/tree-client
+	cp $(Client_dir)/extra_obj/tree.o.extra $(Client_dir)/$(OBJ_dir)/tree.o
+
+	gcc $(Client_dir)/$(OBJ_dir)/entry.o $(Client_dir)/$(OBJ_dir)/data.o $(Client_dir)/$(OBJ_dir)/tree-client.o $(Client_dir)/$(OBJ_dir)/client_stub.o $(Client_dir)/$(OBJ_dir)/network_client.o $(Client_dir)/$(OBJ_dir)/sdmessage.pb-c.o -o $(Client_dir)/binary/tree-client
+
 
 
 tree.o:

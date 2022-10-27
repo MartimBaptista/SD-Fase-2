@@ -18,12 +18,11 @@ int main(int argc, char *argv[]){
 
     //Connecting to the server/tree
     struct rtree_t *rtree;
-    /*
+    
     if(rtree = rtree_connect(argv[1]) == NULL){
         perror("Error connecting to server: ");
         return(-1);
     }
-    */
 
     const char s[2] = " ";
     const char f[2] = "\0";
