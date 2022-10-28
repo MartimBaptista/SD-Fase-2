@@ -2,7 +2,7 @@
 #include "tree.h"
 #include <stdlib.h>
 #include <string.h>
-#include "message.h"
+#include <stdio.h>
 
 struct tree_t *tree;
 
@@ -17,7 +17,6 @@ int tree_skel_init(){
 
     if(tree == NULL)
         return -1;
-
     return 0;
 }
 
@@ -31,11 +30,10 @@ void tree_skel_destroy(){
  * e utiliza a mesma estrutura message_t para devolver o resultado.
  * Retorna 0 (OK) ou -1 (erro, por exemplo, árvore nao incializada)
 */
-int invoke(struct message_t *msg) {
+int invoke(MessageT *msg) {
 
-MessageT__Opcode op = msg->message.opcode;
+MessageT__Opcode op = msg->opcode;
 
-int size;
 char * key;
 struct data_t* data;
 
@@ -43,74 +41,80 @@ struct data_t* data;
 switch(op) {
     case MESSAGE_T__OPCODE__OP_SIZE: ;
 
-        msg->message.opcode = MESSAGE_T__OPCODE__OP_SIZE + 1;
-        msg->message.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-        msg->message.size = tree_size(tree);
+        msg->opcode = MESSAGE_T__OPCODE__OP_SIZE + 1;
+        msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+        msg->size = tree_size(tree);
         return 0;
 
         break;
 
     case MESSAGE_T__OPCODE__OP_HEIGHT: ;
 
-        msg->message.size = tree_height(tree);
-        msg->message.opcode = MESSAGE_T__OPCODE__OP_HEIGHT + 1;
-        msg->message.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+        msg->size = tree_height(tree);
+        msg->opcode = MESSAGE_T__OPCODE__OP_HEIGHT + 1;
+        msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
         return 0;
         break;
 
     case MESSAGE_T__OPCODE__OP_DEL: ;
 
         //executa tree_del
-        int del = tree_del(tree, msg->message.entry->key);
+        int del = tree_del(tree, msg->entry->key);
 
         //caso de erro em tree_del
         if(del == -1){
-          msg->message.opcode = MESSAGE_T__OPCODE__OP_ERROR;
-          msg->message.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+          msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+          msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
           return 0;
         }
 
-        msg->message.opcode = MESSAGE_T__OPCODE__OP_DEL + 1;
-        msg->message.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+        msg->opcode = MESSAGE_T__OPCODE__OP_DEL + 1;
+        msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
         return 0;
         break;
 
     case MESSAGE_T__OPCODE__OP_GET: ;
 
-        data = tree_get(tree, msg->message.entry->key);
+        data = tree_get(tree, msg->entry->key);
 
         //caso a key nao esteja presente
         if(data == NULL){
-            msg->message.opcode = MESSAGE_T__OPCODE__OP_GET + 1;
-            msg->message.c_type = MESSAGE_T__C_TYPE__CT_NONE;
-            msg->message.entry->data.data = NULL;
-            msg->message.entry->data.len = 0;
+            msg->opcode = MESSAGE_T__OPCODE__OP_GET + 1;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            msg->entry->data.data = NULL;
+            msg->entry->data.len = 0;
             return 0;
         }
 
-        msg->message.opcode = MESSAGE_T__OPCODE__OP_GET + 1;
-        msg->message.c_type = MESSAGE_T__C_TYPE__CT_VALUE;
-        msg->message.entry->data.data = data->data;
-        msg->message.entry->data.len = data->datasize;
+        msg->opcode = MESSAGE_T__OPCODE__OP_GET + 1;
+        msg->c_type = MESSAGE_T__C_TYPE__CT_VALUE;
+        msg->entry->data.data = data->data;
+        msg->entry->data.len = data->datasize;
         return 0;
         break;
 
     case MESSAGE_T__OPCODE__OP_PUT: ;
 
         //cria data para tree_put
-        key = msg->message.entry->key;
-        size = msg->message.size;
-        data = data_create2(size, msg->message.entry->data.data);
+        //key = msg->entry->key;
+        key = malloc(strlen(msg->entry->key) + 1);
+        strcpy(key, msg->entry->key);
+        void * buf = malloc(msg->entry->data.len);
+        memcpy(buf, msg->entry->data.data, msg->entry->data.len);
+        data = data_create2(msg->entry->data.len, buf);
 
         //caso de erro em tree_put
+
         if(tree_put(tree,key,data) == -1 ){
-          msg->message.opcode = MESSAGE_T__OPCODE__OP_ERROR;
-          msg->message.c_type = MESSAGE_T__C_TYPE__CT_NONE;
-          return 0;
+            msg->opcode = MESSAGE_T__OPCODE__OP_ERROR;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+            printf("Error on Put\n");
+            return 0;
         }
 
-        msg->message.opcode = MESSAGE_T__OPCODE__OP_PUT + 1;
-        msg->message.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+        msg->opcode = MESSAGE_T__OPCODE__OP_PUT + 1;
+        msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+        printf("Put data with size %d, with key: %s\n", data->datasize, key);
         return 0;
         break;
 
@@ -120,15 +124,15 @@ switch(op) {
 
         //caso arvore vazia
         if(keys == NULL){
-            msg->message.opcode = MESSAGE_T__OPCODE__OP_BAD;
-            msg->message.c_type = MESSAGE_T__C_TYPE__CT_BAD;
+            msg->opcode = MESSAGE_T__OPCODE__OP_BAD;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_BAD;
             return 0;
         }
 
-        msg->message.opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;
-        msg->message.c_type = MESSAGE_T__C_TYPE__CT_KEYS;
-        msg->message.keys = keys;
-        msg->message.size = tree_size(tree);
+        msg->opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;
+        msg->c_type = MESSAGE_T__C_TYPE__CT_KEYS;
+        msg->keys = keys;
+        msg->size = tree_size(tree);
         return 0;
         break;
 
@@ -138,8 +142,8 @@ switch(op) {
 
         //caso arvore vazia
         if(values == NULL){
-            msg->message.opcode = MESSAGE_T__OPCODE__OP_BAD;
-            msg->message.c_type = MESSAGE_T__C_TYPE__CT_BAD;
+            msg->opcode = MESSAGE_T__OPCODE__OP_BAD;
+            msg->c_type = MESSAGE_T__C_TYPE__CT_BAD;
             return 0;
         }
 
@@ -149,13 +153,13 @@ switch(op) {
             data_temp.len = sizeof(values[i]);
             data_temp.data = malloc(sizeof(values[i]));
             memcpy(data_temp.data, values[i], sizeof(void*));
-            msg->message.values[i] = data_temp;
+            msg->values[i] = data_temp;
             i++;
         }
 
-        msg->message.opcode = MESSAGE_T__OPCODE__OP_GETVALUES + 1;
-        msg->message.c_type = MESSAGE_T__C_TYPE__CT_VALUES;
-        msg->message.n_values = i;
+        msg->opcode = MESSAGE_T__OPCODE__OP_GETVALUES + 1;
+        msg->c_type = MESSAGE_T__C_TYPE__CT_VALUES;
+        msg->n_values = i;
 
         return 0;
         break;

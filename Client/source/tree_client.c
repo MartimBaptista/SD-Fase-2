@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
     //Connecting to the server/tree
     struct rtree_t *rtree;
     
-    if(rtree = rtree_connect(argv[1]) == NULL){
+    if((rtree = rtree_connect(argv[1])) == NULL){
         return(-1);
     }
 
@@ -32,8 +32,10 @@ int main(int argc, char *argv[]){
         char *command, *key_s, *data_s;
 
         //Obtaining input
+        printf(">");
         fflush(stdin);
         fgets(input, BUFFERSIZE, stdin);
+
         //Removing newline from string (\n)
         input[strcspn(input, "\n")] = 0;
 
@@ -88,7 +90,7 @@ int main(int argc, char *argv[]){
 
             //Getting it from the tree
             struct data_t *data;
-            if(data = rtree_get(rtree, key) < 0){
+            if((data = rtree_get(rtree, key)) < 0){
                 perror("Error on get:");
                 continue;
             }
@@ -141,7 +143,7 @@ int main(int argc, char *argv[]){
             break;
         }
         else if(strcmp(command, "commands") == 0){
-            printf("\n------//-----\n put <key> <data>\n get <key> \n del <key> \n size \n height \n getkeys \n getvalues \n quit \n------//-----\n");
+            printf("------//-----\n put <key> <data>\n get <key> \n del <key> \n size \n height \n getkeys \n getvalues \n quit \n------//-----\n");
         }
         else{
             printf("Input not recognised, type \"commands\" for a list of the possible commands.\n");

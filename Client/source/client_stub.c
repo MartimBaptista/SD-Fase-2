@@ -1,6 +1,5 @@
 #include "client_stub.h"
 #include "client_stub-private.h"
-#include "message.h"
 
 /* Remote tree. A definir pelo grupo em client_stub-private.h
  */
@@ -14,12 +13,12 @@ struct rtree_t *rtree_connect(const char *address_port) {
     struct rtree_t *rtree = malloc(sizeof(rtree));
     rtree->server = malloc(sizeof(struct sockaddr_in));
     char* ip = strtok(address_port, ":");
-    char* port = atoi(strtok(NULL, ":"));
+    int port = atoi(strtok(NULL, ":"));
 
     rtree->server->sin_family = AF_INET; // família de endereços
     if (inet_pton(AF_INET, ip, &rtree->server->sin_addr) < 1) { // Endereço IP
         printf("Erro ao converter IP\n");
-        return -1;
+        return NULL;
     }
     rtree->server->sin_port = htons(port); // Porta TCP
     
@@ -44,28 +43,38 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry) {
     MessageT msg;
     MessageT__Entry msg_entry;
 
+    //Create msg
     message_t__init(&msg);
 
     // write codes to message
     msg.opcode = MESSAGE_T__OPCODE__OP_PUT;
     msg.c_type = MESSAGE_T__C_TYPE__CT_ENTRY;
 
-    //write entrys
+    //Create entry
     message_t__entry__init(&msg_entry);
+
+    //write entrys key
     msg_entry.key = malloc(strlen(entry->key) + 1);
     stpcpy(msg_entry.key, entry->key);
 
+    //write entry data
     msg_entry.data.len = entry->value->datasize;
     msg_entry.data.data = malloc(entry->value->datasize);
     memcpy(msg_entry.data.data, entry->value->data, entry->value->datasize);
 
-    struct message_t _msg;
-    _msg.message = msg;
-    MessageT *answer = network_send_receive(rtree, &_msg);
+    //Put entry on msg
+    msg.entry = &msg_entry;
+
+    printf("Sending key: %s\n", msg.entry->key);
+
+    MessageT *answer = network_send_receive(rtree, &msg);
 
     if (answer->opcode == MESSAGE_T__OPCODE__OP_PUT + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_NONE){
         return 0;
     }
+
+    free(msg_entry.key);
+    free(msg_entry.data.data);
     
     return -1; 
 }

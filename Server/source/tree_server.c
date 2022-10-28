@@ -14,6 +14,11 @@ int main(int argc, char *argv[]){
 
     int listening_socket_fd = network_server_init(listening_socket_port);
 
+    if(tree_skel_init() < 0){
+        printf("Error Creating the tree\n");
+        return -1;
+    }
+
     network_main_loop(listening_socket_fd);
 
     return 0;

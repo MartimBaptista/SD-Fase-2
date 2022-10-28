@@ -2,7 +2,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include "client_stub-private.h"
-#include "message.h"
 
 /* Esta função deve:
  * - Obter o endereço do servidor (struct sockaddr_in) a base da
@@ -21,7 +20,7 @@ int network_connect(struct rtree_t *rtree){
     }
 
     // Estabelece conexão com o servidor definido na estrutura server
-    if (connect(rtree->client_sockfd, rtree->server, sizeof(*rtree->server)) < 0) {
+    if (connect(rtree->client_sockfd, (struct sockaddr *)rtree->server, sizeof(*rtree->server)) < 0) {
         perror("Erro ao conectar-se ao servidor");
         close(rtree->client_sockfd);
         return -1;
@@ -33,7 +32,7 @@ int network_connect(struct rtree_t *rtree){
 /* Função para ler toda uma messagem num determinado porto.
  * Retornar o tamanho total lido (OK) ou <0 (erro).
  */
-int read_all(int sock, char *buf, int len){
+int read_all(int sock, void *buf, int len){
     int bufsize = len;
     while(len>0) {
         int res = read(sock, buf, len);
@@ -51,7 +50,7 @@ int read_all(int sock, char *buf, int len){
 /* Função para escrever toda uma messagem num determinado porto.
  * Retornar o tamanho total escrito (OK) ou <0 (erro).
  */
-int write_all(int sock, char *buf, int len){
+int write_all(int sock, void *buf, int len){
     int bufsize = len;
     while(len>0) {
         int res = write(sock, buf, len);
@@ -74,24 +73,24 @@ int write_all(int sock, char *buf, int len){
  * - De-serializar a mensagem de resposta;
  * - Retornar a mensagem de-serializada ou NULL em caso de erro.
  */
-struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t *msg){
+MessageT *network_send_receive(struct rtree_t * rtree, MessageT *msg){
 
-    int size = message_t__get_packed_size(&msg->message);
+    int size = message_t__get_packed_size(msg);
     int size_n = htonl(size);
 
     uint8_t *buf = malloc(size);
-    message_t__pack(&msg->message,buf);
+    message_t__pack(msg, buf);
 
     //SENDING REQUEST
 
-    if(write_all(rtree->client_sockfd, &size_n, sizeof(int)) < 0){
+    if(write_all(rtree->client_sockfd, &size_n, sizeof(size_n)) < 0){
         perror("Erro ao enviar tamanho dos dados ao servidor");
         close(rtree->client_sockfd);
         return -1;
     }
 
 
-    if(write_all(rtree->client_sockfd, buf, size_n) < 0){
+    if(write_all(rtree->client_sockfd, buf, size) < 0){
         perror("Erro ao enviar dados ao servidor");
         close(rtree->client_sockfd);
         return -1;
@@ -99,32 +98,27 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
 
 
     //RECEIVING ANSWER
-    int size_r;
+    size = 0; 
+    size_n = 0;
 
-    if(read_all(rtree->client_sockfd, &size_r, sizeof(int)) < 0){
+    if(read_all(rtree->client_sockfd, &size_n, sizeof(size_n)) < 0){
 		perror("Erro ao receber tamanho dos dados do servidor");
 		close(rtree->client_sockfd);
         return -1;
     }
 
-    size_r = ntohl(size_r);
-    uint8_t buf_r[size_r];
+    size = ntohl(size_n);
+    uint8_t buf_r[size];
 
-    if(read_all(rtree->client_sockfd, buf_r, size_r) < 0){
+    if(read_all(rtree->client_sockfd, buf_r, size) < 0){
         perror("Erro ao receber dados do servidor");
         close(rtree->client_sockfd);
         return -1;
     }
 
-    MessageT *aux = message_t__unpack(NULL, size_r, buf_r);
-
-    struct message_t *res = (struct message_t * ) malloc(sizeof(struct message_t));
-    message_t__init(&res->message);
-
+    MessageT *res = message_t__unpack(NULL, size, buf_r);
     if(res == NULL)
         return NULL;
-
-    res->message = *aux;
     return res;
 }
 
