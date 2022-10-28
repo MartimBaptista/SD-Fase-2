@@ -86,14 +86,14 @@ MessageT *network_send_receive(struct rtree_t * rtree, MessageT *msg){
     if(write_all(rtree->client_sockfd, &size_n, sizeof(size_n)) < 0){
         perror("Erro ao enviar tamanho dos dados ao servidor");
         close(rtree->client_sockfd);
-        return -1;
+        return NULL;
     }
 
 
     if(write_all(rtree->client_sockfd, buf, size) < 0){
         perror("Erro ao enviar dados ao servidor");
         close(rtree->client_sockfd);
-        return -1;
+        return NULL;
     }
 
 
@@ -104,7 +104,7 @@ MessageT *network_send_receive(struct rtree_t * rtree, MessageT *msg){
     if(read_all(rtree->client_sockfd, &size_n, sizeof(size_n)) < 0){
 		perror("Erro ao receber tamanho dos dados do servidor");
 		close(rtree->client_sockfd);
-        return -1;
+        return NULL;
     }
 
     size = ntohl(size_n);
@@ -113,7 +113,7 @@ MessageT *network_send_receive(struct rtree_t * rtree, MessageT *msg){
     if(read_all(rtree->client_sockfd, buf_r, size) < 0){
         perror("Erro ao receber dados do servidor");
         close(rtree->client_sockfd);
-        return -1;
+        return NULL;
     }
 
     MessageT *res = message_t__unpack(NULL, size, buf_r);

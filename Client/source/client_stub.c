@@ -1,5 +1,6 @@
 #include "client_stub.h"
 #include "client_stub-private.h"
+#include "inet.h"
 
 /* Remote tree. A definir pelo grupo em client_stub-private.h
  */
@@ -12,7 +13,7 @@ struct rtree_t;
 struct rtree_t *rtree_connect(const char *address_port) {
     struct rtree_t *rtree = malloc(sizeof(rtree));
     rtree->server = malloc(sizeof(struct sockaddr_in));
-    char* ip = strtok(address_port, ":");
+    char* ip = strtok((char*)address_port, ":");
     int port = atoi(strtok(NULL, ":"));
 
     rtree->server->sin_family = AF_INET; // família de endereços
@@ -157,19 +158,18 @@ int rtree_del(struct rtree_t *rtree, char *key) {
 /* Devolve o número de elementos contidos na árvore.
  */
 int rtree_size(struct rtree_t *rtree) {
-    MessageT *msg;
+    MessageT msg;
 
-    message_t__init(msg);
+    message_t__init(&msg);
 
     // write codes to message
-    msg->opcode = MESSAGE_T__OPCODE__OP_SIZE;
-    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+    msg.opcode = MESSAGE_T__OPCODE__OP_SIZE;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
 
     // send message
-    MessageT *answer = network_send_receive(rtree, msg);
+    MessageT *answer = network_send_receive(rtree, &msg);
 
-    if (answer->opcode == MESSAGE_T__OPCODE__OP_SIZE + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_RESULT)
-    {
+    if (answer->opcode == MESSAGE_T__OPCODE__OP_SIZE + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_RESULT){
         return answer->size;
     }
     
@@ -179,19 +179,18 @@ int rtree_size(struct rtree_t *rtree) {
 /* Função que devolve a altura da árvore.
  */
 int rtree_height(struct rtree_t *rtree) {
-    MessageT *msg;
+    MessageT msg;
 
-    message_t__init(msg);
+    message_t__init(&msg);
 
     // write codes to message
-    msg->opcode = MESSAGE_T__OPCODE__OP_HEIGHT;
-    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+    msg.opcode = MESSAGE_T__OPCODE__OP_HEIGHT;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
 
     // send message
-    MessageT *answer = network_send_receive(rtree, msg);
+    MessageT *answer = network_send_receive(rtree, &msg);
 
-    if (answer->opcode == MESSAGE_T__OPCODE__OP_HEIGHT + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_RESULT)
-    {
+    if (answer->opcode == MESSAGE_T__OPCODE__OP_HEIGHT + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_RESULT){
         return answer->size;
     }
     
@@ -202,18 +201,17 @@ int rtree_height(struct rtree_t *rtree) {
  * colocando um último elemento a NULL.
  */
 char **rtree_get_keys(struct rtree_t *rtree) {
-    MessageT *msg;
+    MessageT msg;
 
-    message_t__init(msg);
+    message_t__init(&msg);
 
     // write codes to message
-    msg->opcode = MESSAGE_T__OPCODE__OP_GETKEYS;
-    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+    msg.opcode = MESSAGE_T__OPCODE__OP_GETKEYS;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
 
-    MessageT *answer = network_send_receive(rtree, msg);
+    MessageT *answer = network_send_receive(rtree, &msg);
 
-    if (answer->opcode != MESSAGE_T__OPCODE__OP_GETKEYS + 1 || answer->c_type != MESSAGE_T__C_TYPE__CT_KEYS)
-    {
+    if (answer->opcode != MESSAGE_T__OPCODE__OP_GETKEYS + 1 || answer->c_type != MESSAGE_T__C_TYPE__CT_KEYS){
         return NULL;
     }
     
@@ -222,8 +220,7 @@ char **rtree_get_keys(struct rtree_t *rtree) {
 
     ret = malloc(sizeof(char *) * n_keys);
 
-    for (size_t i = 0; i < n_keys; i++) 
-    {
+    for (size_t i = 0; i < n_keys; i++) {
         ret[i] = malloc(strlen(answer->keys[i]) + 1);
         strcpy(ret[i], answer->keys[i]);
     }
@@ -235,18 +232,17 @@ char **rtree_get_keys(struct rtree_t *rtree) {
  * colocando um último elemento a NULL.
  */
 void **rtree_get_values(struct rtree_t *rtree) {
-    MessageT *msg;
+    MessageT msg;
 
-    message_t__init(msg);
+    message_t__init(&msg);
 
     // write codes to message
-    msg->opcode = MESSAGE_T__OPCODE__OP_GETVALUES;
-    msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
+    msg.opcode = MESSAGE_T__OPCODE__OP_GETVALUES;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_NONE;
 
-    MessageT *answer = network_send_receive(rtree, msg);
+    MessageT *answer = network_send_receive(rtree, &msg);
 
-    if (answer->opcode != MESSAGE_T__OPCODE__OP_GETVALUES + 1 || answer->c_type != MESSAGE_T__C_TYPE__CT_VALUES)
-    {
+    if (answer->opcode != MESSAGE_T__OPCODE__OP_GETVALUES + 1 || answer->c_type != MESSAGE_T__C_TYPE__CT_VALUES){
         return NULL;
     }
     
@@ -254,17 +250,12 @@ void **rtree_get_values(struct rtree_t *rtree) {
     
     struct data_t **ret = malloc(sizeof(struct data_t *) * (n_values + 1));
 
-    for (size_t i = 0; i < n_values; i++) 
-    {
-        
+    for (size_t i = 0; i < n_values; i++) { 
         ret[i] = malloc(sizeof(struct data_t));
-
-        
         ret[i]->datasize = answer->values[i].len;
-        
         ret[i]->data = malloc(ret[i]->datasize);
         memcpy(ret[i]->data, answer->values[i].data, ret[i]->datasize);
     }
 
-    return ret;
+    return (void**)ret;
 }
