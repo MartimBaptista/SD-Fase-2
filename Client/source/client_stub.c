@@ -65,8 +65,6 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry) {
     //Put entry on msg
     msg.entry = &msg_entry;
 
-    printf("Sending key: %s\n", msg.entry->key);
-
     MessageT *answer = network_send_receive(rtree, &msg);
 
     if (answer->opcode == MESSAGE_T__OPCODE__OP_PUT + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_NONE){
@@ -83,27 +81,39 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry) {
  * Em caso de erro, devolve NULL.
  */
 struct data_t *rtree_get(struct rtree_t *rtree, char *key) {
-    MessageT *msg;
+    MessageT msg;
+    MessageT__Entry msg_entry;
 
-    message_t__init(msg);
+    message_t__init(&msg);
 
     // write codes to message
-    msg->opcode = MESSAGE_T__OPCODE__OP_GET;
-    msg->c_type = MESSAGE_T__C_TYPE__CT_KEY;
+    msg.opcode = MESSAGE_T__OPCODE__OP_GET;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_KEY;
 
-    msg->entry->key = key;
+    //Create entry
+    message_t__entry__init(&msg_entry);
 
-    MessageT *answer = network_send_receive(rtree, msg);
+    //write entrys key
+    msg_entry.key = malloc(strlen(key) + 1);
+    stpcpy(msg_entry.key, key);
 
-    if (answer->opcode == MESSAGE_T__OPCODE__OP_GET + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_VALUE)
-    {
-        struct data_t *ret = data_create(answer->entry->data.len);
+    //Put entry on msg
+    msg.entry = &msg_entry;
 
-        memcpy(ret->data, answer->entry->data.data, ret->datasize);     
+    MessageT *answer = network_send_receive(rtree, &msg);
 
-        return ret;
+    if (answer->opcode == MESSAGE_T__OPCODE__OP_GET + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_VALUE){
+        //In case there is an entry with that key
+        if(answer->c_type == MESSAGE_T__C_TYPE__CT_VALUE){
+            struct data_t *ret = data_create(answer->entry->data.len);
+            memcpy(ret->data, answer->entry->data.data, ret->datasize);     
+            return ret;
+        }
+        //In case there isn't an entry with that key
+        else if(answer->c_type == MESSAGE_T__C_TYPE__CT_NONE){
+            return NULL; //TODO maybe return something else?
+        }
     }
-    
     return NULL; 
 }
 

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #define BUFFERSIZE 500 //max input size
 
@@ -30,9 +31,9 @@ int main(int argc, char *argv[]){
     while (1){
         char input[BUFFERSIZE];
         char *command, *key_s, *data_s;
+        printf("\n>");
 
         //Obtaining input
-        printf(">");
         fflush(stdin);
         fgets(input, BUFFERSIZE, stdin);
 
@@ -45,6 +46,7 @@ int main(int argc, char *argv[]){
         data_s = strtok(NULL, f);
 
         //Case for each command
+        //CASE PUT:
         if(strcmp(command, "put") == 0){
 
             //Checking for key
@@ -72,11 +74,15 @@ int main(int argc, char *argv[]){
 
             //Putting it in tree
             if(rtree_put(rtree, entry) < 0){
-                perror("Error on put:");
+                perror("Error on put");
                 continue;
             }
+
+            printf("Entry has been put into the tree.\n");
+
             entry_destroy(entry);
         }
+        //CASE GET:
         else if(strcmp(command, "get") == 0){
             //Checking for key
             if(key_s == NULL){
@@ -90,13 +96,23 @@ int main(int argc, char *argv[]){
 
             //Getting it from the tree
             struct data_t *data;
-            if((data = rtree_get(rtree, key)) < 0){
-                perror("Error on get:");
+            if((data = rtree_get(rtree, key)) == NULL){
+                //In case there is an entry with that key
+                if(strcmp(strerror(errno), "Success") == 0){
+                    printf("Key not found on tree.\n");
+                    continue;
+                }
+                //In case there isn't an entry with that key
+                else{
+                perror("Error on get");
                 continue;
+                }
             }
-            printf("Received data: %s", (char*)data->data);
+            printf("Received data of size: %d, with the contents: %s\n", data->datasize, (char*)data->data);
             free(key);
+            data_destroy(data);
         }
+        //CASE DEL:
         else if(strcmp(command, "del") == 0){
             //Checking for key
             if(key_s == NULL){
@@ -110,41 +126,47 @@ int main(int argc, char *argv[]){
 
             //Delliting it from the tree
             if(rtree_del(rtree, key) < 0){
-                perror("Error on del:");
+                perror("Error on del");
                 continue;
             }
            free(key);
         }
+        //CASE SIZE:
         else if(strcmp(command, "size") == 0){
             //Getting tree size
             printf("Tree size: %d", rtree_size(rtree));
         }
+        //CASE HEIGHT:
         else if(strcmp(command, "height") == 0){
             //Getting tree height
             printf("Tree height: %d", rtree_height(rtree));
         }
+        //CASE GETKEYS:
         else if(strcmp(command, "getkeys") == 0){
             //TODO...
             //char **rtree_get_keys(struct rtree_t *rtree);
 
         }
+        //CASE GETVALUES:
         else if(strcmp(command, "getvalues") == 0){
             //TODO...
             //void **rtree_get_values(struct rtree_t *rtree);
-
         }
+        //CASE QUIT:
         else if(strcmp(command, "quit") == 0){
             //Disconnecting from server/tree
             if(rtree_disconnect(rtree) < 0){
-                perror("Error on disconnect:");
+                perror("Error on disconnect");
                 return -1;
             }
             printf("Disconnected from server\n");
             break;
         }
+        //CASE COMMANDS:
         else if(strcmp(command, "commands") == 0){
             printf("------//-----\n put <key> <data>\n get <key> \n del <key> \n size \n height \n getkeys \n getvalues \n quit \n------//-----\n");
         }
+        //CASE DEFAULT
         else{
             printf("Input not recognised, type \"commands\" for a list of the possible commands.\n");
         }
