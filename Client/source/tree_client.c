@@ -145,7 +145,18 @@ int main(int argc, char *argv[]){
         else if(strcmp(command, "getkeys") == 0){
             //TODO...
             //char **rtree_get_keys(struct rtree_t *rtree);
+            char **keys = rtree_get_keys(rtree);
 
+            printf("Keys of Tree: { ");
+            for (size_t i = 0; keys[i] != NULL; i++)
+            {
+                printf("%s", keys[i]);
+                if (keys[i + 1] != NULL )
+                {
+                    printf(", ");
+                }
+            }
+            printf("}");
         }
         //CASE GETVALUES:
         else if(strcmp(command, "getvalues") == 0){
