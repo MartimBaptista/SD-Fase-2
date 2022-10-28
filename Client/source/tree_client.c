@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
         return(-1);
     }
 
-    printf("Connected to server.");
+    printf("Connected to server.\n");
 
     const char s[2] = " ";
     const char f[2] = "\0";
@@ -69,14 +69,11 @@ int main(int argc, char *argv[]){
             struct entry_t *entry = entry_create(key, data);
 
             //Putting it in tree
-            /*
             if(rtree_put(rtree, entry) < 0){
                 perror("Error on put:");
                 continue;
             }
-            */
             entry_destroy(entry);
-
         }
         else if(strcmp(command, "get") == 0){
             //Checking for key
@@ -91,13 +88,11 @@ int main(int argc, char *argv[]){
 
             //Getting it from the tree
             struct data_t *data;
-            /*
             if(data = rtree_get(rtree, key) < 0){
                 perror("Error on get:");
                 continue;
             }
             printf("Received data: %s", (char*)data->data);
-            */
             free(key);
         }
         else if(strcmp(command, "del") == 0){
@@ -112,21 +107,19 @@ int main(int argc, char *argv[]){
             strcpy(key, key_s);
 
             //Delliting it from the tree
-            /*
             if(rtree_del(rtree, key) < 0){
                 perror("Error on del:");
                 continue;
             }
-            */
            free(key);
         }
         else if(strcmp(command, "size") == 0){
             //Getting tree size
-            //print("Tree size: %d", rtree_size(rtree));
+            printf("Tree size: %d", rtree_size(rtree));
         }
         else if(strcmp(command, "height") == 0){
             //Getting tree height
-            //print("Tree height: %d", rtree_height(rtree));
+            printf("Tree height: %d", rtree_height(rtree));
         }
         else if(strcmp(command, "getkeys") == 0){
             //TODO...
@@ -140,12 +133,10 @@ int main(int argc, char *argv[]){
         }
         else if(strcmp(command, "quit") == 0){
             //Disconnecting from server/tree
-            /*
             if(rtree_disconnect(rtree) < 0){
                 perror("Error on disconnect:");
                 return -1;
             }
-            */
             printf("Disconnected from server\n");
             break;
         }

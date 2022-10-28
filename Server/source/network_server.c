@@ -105,6 +105,7 @@ struct message_t *network_receive(int client_socket){
 		close(client_socket);
     }
 
+    printf("Expecting to receive message of size: %d\n", size);
     size = ntohl(size);
     uint8_t buf [size];
 
@@ -112,6 +113,8 @@ struct message_t *network_receive(int client_socket){
 		perror("Erro ao receber dados do cliente");
 		close(client_socket);
     }
+
+    printf("Received message\n");
 
     MessageT *aux = message_t__unpack(NULL, size, buf);
     res->message = *aux;

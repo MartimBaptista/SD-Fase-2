@@ -132,6 +132,6 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
  * network_connect().
  */
 int network_close(struct rtree_t * rtree){
-    close(rtree->client_sockfd);
+    close(rtree->client_sockfd); //TODO segfault here
     return 0;
 }

@@ -1,5 +1,6 @@
 #include "client_stub.h"
 #include "client_stub-private.h"
+#include "message.h"
 
 /* Remote tree. A definir pelo grupo em client_stub-private.h
  */
@@ -40,22 +41,29 @@ int rtree_disconnect(struct rtree_t *rtree) {
  * Devolve 0 (ok, em adição/substituição) ou -1 (problemas).
  */
 int rtree_put(struct rtree_t *rtree, struct entry_t *entry) {
-    MessageT *msg;
+    MessageT msg;
+    MessageT__Entry msg_entry;
 
-    message_t__init(msg);
+    message_t__init(&msg);
 
     // write codes to message
-    msg->opcode = MESSAGE_T__OPCODE__OP_PUT;
-    msg->c_type = MESSAGE_T__C_TYPE__CT_ENTRY;
-    msg->entry->key = entry->key;
+    msg.opcode = MESSAGE_T__OPCODE__OP_PUT;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_ENTRY;
 
-    msg->entry->data.len = entry->value->datasize;
-    memcpy(msg->entry->data.data, entry->value->data, entry->value->datasize);
+    //write entrys
+    message_t__entry__init(&msg_entry);
+    msg_entry.key = malloc(strlen(entry->key) + 1);
+    stpcpy(msg_entry.key, entry->key);
 
-    MessageT *answer = network_send_receive(rtree, msg);
+    msg_entry.data.len = entry->value->datasize;
+    msg_entry.data.data = malloc(entry->value->datasize);
+    memcpy(msg_entry.data.data, entry->value->data, entry->value->datasize);
 
-    if (answer->opcode == MESSAGE_T__OPCODE__OP_PUT + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_NONE)
-    {
+    struct message_t _msg;
+    _msg.message = msg;
+    MessageT *answer = network_send_receive(rtree, &_msg);
+
+    if (answer->opcode == MESSAGE_T__OPCODE__OP_PUT + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_NONE){
         return 0;
     }
     
