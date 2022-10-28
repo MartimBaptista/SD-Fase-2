@@ -126,10 +126,19 @@ int main(int argc, char *argv[]){
 
             //Delliting it from the tree
             if(rtree_del(rtree, key) < 0){
-                perror("Error on del");
-                continue;
+                //In case there is an entry with that key
+                if(strcmp(strerror(errno), "Success") == 0){
+                    printf("Key not found on tree.\n");
+                    continue;
+                }
+                //In case there isn't an entry with that key
+                else{
+                    perror("Error on del");
+                    continue;
+                }
             }
-           free(key);
+            printf("Entry deleted from tree.\n");
+            free(key);
         }
         //CASE SIZE:
         else if(strcmp(command, "size") == 0){

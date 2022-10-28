@@ -66,13 +66,13 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry) {
     msg.entry = &msg_entry;
 
     MessageT *answer = network_send_receive(rtree, &msg);
-
+    free(msg_entry.key);
+    free(msg_entry.data.data);
+    
     if (answer->opcode == MESSAGE_T__OPCODE__OP_PUT + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_NONE){
         return 0;
     }
 
-    free(msg_entry.key);
-    free(msg_entry.data.data);
     
     return -1; 
 }
@@ -84,6 +84,7 @@ struct data_t *rtree_get(struct rtree_t *rtree, char *key) {
     MessageT msg;
     MessageT__Entry msg_entry;
 
+    //Create msg
     message_t__init(&msg);
 
     // write codes to message
@@ -101,6 +102,7 @@ struct data_t *rtree_get(struct rtree_t *rtree, char *key) {
     msg.entry = &msg_entry;
 
     MessageT *answer = network_send_receive(rtree, &msg);
+    free(msg_entry.key);    
 
     if (answer->opcode == MESSAGE_T__OPCODE__OP_GET + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_VALUE){
         //In case there is an entry with that key
@@ -122,20 +124,30 @@ struct data_t *rtree_get(struct rtree_t *rtree, char *key) {
  * Devolve: 0 (ok), -1 (key not found ou problemas).
  */
 int rtree_del(struct rtree_t *rtree, char *key) {
-    MessageT *msg;
+    MessageT msg;
+    MessageT__Entry msg_entry;
 
-    message_t__init(msg);
+    //Create msg
+    message_t__init(&msg);
 
     // write codes to message
-    msg->opcode = MESSAGE_T__OPCODE__OP_DEL;
-    msg->c_type = MESSAGE_T__C_TYPE__CT_KEY;
+    msg.opcode = MESSAGE_T__OPCODE__OP_DEL;
+    msg.c_type = MESSAGE_T__C_TYPE__CT_KEY;
 
-    strcpy(msg->entry->key, key);
+    //Create entry
+    message_t__entry__init(&msg_entry);
 
-    MessageT *answer = network_send_receive(rtree, msg);
+    //write entrys key
+    msg_entry.key = malloc(strlen(key) + 1);
+    stpcpy(msg_entry.key, key);
 
-    if (answer->opcode == MESSAGE_T__OPCODE__OP_DEL + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_NONE)
-    {
+    //Put entry on msg
+    msg.entry = &msg_entry;
+
+    MessageT *answer = network_send_receive(rtree,&msg);
+    free(msg_entry.key);
+
+    if (answer->opcode == MESSAGE_T__OPCODE__OP_DEL + 1 && answer->c_type == MESSAGE_T__C_TYPE__CT_NONE){
         return 0;
     }
     
