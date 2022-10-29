@@ -31,6 +31,12 @@ struct rtree_t *rtree_connect(const char *address_port) {
  * Retorna 0 se tudo correr bem e -1 em caso de erro.
  */
 int rtree_disconnect(struct rtree_t *rtree) {
+    MessageT msg;
+
+    //Create empty msg and sending (signaling a disconnect)
+    message_t__init(&msg);
+    network_send_receive(rtree, &msg);
+
     int resp = network_close(rtree);
     free(rtree);
     return resp;

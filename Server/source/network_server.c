@@ -176,8 +176,12 @@ int network_main_loop(int listening_socket){
 
         printf("Connection established in port: %d\n", connsockfd);
 
-        while (1) { //TODO While connected, but how
+        while (1) {
     		msg = network_receive(connsockfd);
+
+            if(msg->opcode == NULL){ //Disconnect
+                break;
+            }
 
             if(invoke(msg) < 0){
                 printf("Error on invoke\n");
@@ -186,6 +190,9 @@ int network_main_loop(int listening_socket){
 
             network_send(connsockfd, msg);
         }
+
+        printf("Disconecting from port: %d\n", connsockfd);
+        close(connsockfd);
     }
 }
 

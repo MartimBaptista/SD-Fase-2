@@ -96,6 +96,10 @@ MessageT *network_send_receive(struct rtree_t * rtree, MessageT *msg){
         return NULL;
     }
 
+    if(msg->opcode == NULL){ //Disconnect
+        return NULL;
+    }
+
 
     //RECEIVING ANSWER
     size = 0; 
@@ -126,6 +130,6 @@ MessageT *network_send_receive(struct rtree_t * rtree, MessageT *msg){
  * network_connect().
  */
 int network_close(struct rtree_t * rtree){
-    close(rtree->client_sockfd); //TODO segfault here
+    close(rtree->client_sockfd);
     return 0;
 }
