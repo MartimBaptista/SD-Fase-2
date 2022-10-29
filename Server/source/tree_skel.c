@@ -145,19 +145,10 @@ switch(op) {
     case MESSAGE_T__OPCODE__OP_GETVALUES: ;
         printf("Requested: getvalues\n");
 
-        void** values = tree_get_values(tree);
-        
-        //DEBUG
-        printf("Received data: ");
-        int n = 0;
-        while(values[n] != NULL){
-            printf("/%s/", (char*)values[n]);
-            n++;
-        }
-        printf("\n");
+        void** datas = tree_get_values(tree);
 
         //caso arvore vazia
-        if(values == NULL){
+        if(datas == NULL){
             msg->opcode = MESSAGE_T__OPCODE__OP_BAD;
             msg->c_type = MESSAGE_T__C_TYPE__CT_BAD;
             return 0;
@@ -167,17 +158,15 @@ switch(op) {
         msg->values = malloc(tree_size(tree) * sizeof(ProtobufCBinaryData*));
 
         int i = 0;
-        while(values[i] != NULL){
+        while(datas[i] != NULL){
             ProtobufCBinaryData data_temp;
-            data_temp.len = sizeof(values[i]);
-            data_temp.data = malloc(sizeof(values[i]));
-            memcpy(data_temp.data, values[i], sizeof(values[i]));
+            data = (struct data*)datas[i];
+            data_temp.len = data->datasize;
+            data_temp.data = malloc(data->datasize);
+            memcpy(data_temp.data, data->data, data->datasize);
             msg->values[i] = data_temp;
             i++;
         }
-
-        //DEBUG
-        printf("First data on msg: %s\n", (char*)msg->values[1].data);
 
         msg->opcode = MESSAGE_T__OPCODE__OP_GETVALUES + 1;
         msg->c_type = MESSAGE_T__C_TYPE__CT_VALUES;

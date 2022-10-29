@@ -253,14 +253,20 @@ void **rtree_get_values(struct rtree_t *rtree) {
     }
     
     int n_values = answer->n_values;
-    
-    struct data_t **ret = malloc(sizeof(struct data_t *) * (n_values + 1));
+
+    struct data_t **ret = malloc(sizeof(struct data_t *) * (n_values + 1)); // + 1 to account for NULL terminator
 
     for (size_t i = 0; i < n_values; i++) { 
         ret[i] = malloc(sizeof(struct data_t));
         ret[i]->datasize = answer->values[i].len;
         ret[i]->data = malloc(ret[i]->datasize);
         memcpy(ret[i]->data, answer->values[i].data, ret[i]->datasize);
+    }
+
+    ret[n_values] = NULL;
+
+    for (size_t i = 0; i < n_values; i++){
+        printf("%s\n", (char*)ret[i]->data);
     }
 
     return (void**)ret;

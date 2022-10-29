@@ -171,14 +171,17 @@ int main(int argc, char *argv[]){
 
         //CASE GETVALUES:
         else if(strcmp(command, "getvalues") == 0){
-            char **values = (char**)rtree_get_values(rtree);;
+            void** datas = rtree_get_values(rtree);
 
+            int i = 0;
             printf("Values of Tree: {");
-            for (size_t i = 0; values[i] != NULL; i++){
-                printf("%s", values[i]);
-                if (values[i + 1] != NULL){
+            while(datas[i] != NULL){
+                struct data_t* data = (struct data*)datas[i];
+                printf("%s", data->data);
+                if (datas[i + 1] != NULL){
                     printf(", ");
                 }
+                i++;
             }
             printf("}\n");
         }
