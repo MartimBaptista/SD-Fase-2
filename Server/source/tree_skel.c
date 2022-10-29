@@ -40,6 +40,7 @@ struct data_t* data;
 
 switch(op) {
     case MESSAGE_T__OPCODE__OP_SIZE: ;
+        printf("Requested: size\n");
 
         msg->opcode = MESSAGE_T__OPCODE__OP_SIZE + 1;
         msg->c_type = MESSAGE_T__C_TYPE__CT_RESULT;
@@ -49,6 +50,7 @@ switch(op) {
         break;
 
     case MESSAGE_T__OPCODE__OP_HEIGHT: ;
+        printf("Requested: height\n");
 
         msg->size = tree_height(tree);
         msg->opcode = MESSAGE_T__OPCODE__OP_HEIGHT + 1;
@@ -57,6 +59,7 @@ switch(op) {
         break;
 
     case MESSAGE_T__OPCODE__OP_DEL: ;
+        printf("Requested: del %s\n", msg->entry->key);
 
         //executa tree_del
         int del = tree_del(tree, msg->entry->key);
@@ -74,6 +77,7 @@ switch(op) {
         break;
 
     case MESSAGE_T__OPCODE__OP_GET: ;
+        printf("Requested: get %s\n", msg->entry->key);
 
         data = tree_get(tree, msg->entry->key);
 
@@ -94,6 +98,7 @@ switch(op) {
         break;
 
     case MESSAGE_T__OPCODE__OP_PUT: ;
+        printf("Requested: put %s %s\n", msg->entry->key, (char*)msg->entry->data.data);
 
         //cria data para tree_put
         //key = msg->entry->key;
@@ -114,11 +119,11 @@ switch(op) {
 
         msg->opcode = MESSAGE_T__OPCODE__OP_PUT + 1;
         msg->c_type = MESSAGE_T__C_TYPE__CT_NONE;
-        printf("Put data with size %d, with key: %s\n", data->datasize, key);
         return 0;
         break;
 
     case MESSAGE_T__OPCODE__OP_GETKEYS: ;
+        printf("Requested: getkeys\n");
 
         char** keys = tree_get_keys(tree);
 
@@ -131,14 +136,25 @@ switch(op) {
 
         msg->opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;
         msg->c_type = MESSAGE_T__C_TYPE__CT_KEYS;
+        msg->n_keys = tree_size(tree);
         msg->keys = keys;
-        msg->size = tree_size(tree);
+
         return 0;
         break;
 
     case MESSAGE_T__OPCODE__OP_GETVALUES: ;
+        printf("Requested: getvalues\n");
 
         void** values = tree_get_values(tree);
+        
+        //DEBUG
+        printf("Received data: ");
+        int n = 0;
+        while(values[n] != NULL){
+            printf("/%s/", (char*)values[n]);
+            n++;
+        }
+        printf("\n");
 
         //caso arvore vazia
         if(values == NULL){
@@ -147,25 +163,31 @@ switch(op) {
             return 0;
         }
 
+        msg->n_values = tree_size(tree);
+        msg->values = malloc(tree_size(tree) * sizeof(ProtobufCBinaryData*));
+
         int i = 0;
         while(values[i] != NULL){
             ProtobufCBinaryData data_temp;
             data_temp.len = sizeof(values[i]);
             data_temp.data = malloc(sizeof(values[i]));
-            memcpy(data_temp.data, values[i], sizeof(void*));
+            memcpy(data_temp.data, values[i], sizeof(values[i]));
             msg->values[i] = data_temp;
             i++;
         }
 
+        //DEBUG
+        printf("First data on msg: %s\n", (char*)msg->values[1].data);
+
         msg->opcode = MESSAGE_T__OPCODE__OP_GETVALUES + 1;
         msg->c_type = MESSAGE_T__C_TYPE__CT_VALUES;
-        msg->n_values = i;
 
         return 0;
         break;
 
     case MESSAGE_T__OPCODE__OP_ERROR: ;
-       return -1;
+        printf("Request not recognised.\n");
+        return -1;
     default: ;
        return -1;
     }   
