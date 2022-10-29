@@ -82,6 +82,7 @@ int main(int argc, char *argv[]){
 
             entry_destroy(entry);
         }
+
         //CASE GET:
         else if(strcmp(command, "get") == 0){
             //Checking for key
@@ -108,10 +109,11 @@ int main(int argc, char *argv[]){
                 continue;
                 }
             }
-            printf("Received data of size: %d, with the contents: %s\n", data->datasize, (char*)data->data);
+            printf("Key %s has the following data: %s\n", key, (char*)data->data);
             free(key);
             data_destroy(data);
         }
+
         //CASE DEL:
         else if(strcmp(command, "del") == 0){
             //Checking for key
@@ -140,38 +142,47 @@ int main(int argc, char *argv[]){
             printf("Entry deleted from tree.\n");
             free(key);
         }
+
         //CASE SIZE:
         else if(strcmp(command, "size") == 0){
             //Getting tree size
             printf("Tree size: %d", rtree_size(rtree));
         }
+
         //CASE HEIGHT:
         else if(strcmp(command, "height") == 0){
             //Getting tree height
             printf("Tree height: %d", rtree_height(rtree));
         }
+
         //CASE GETKEYS:
         else if(strcmp(command, "getkeys") == 0){
-            //TODO...
-            //char **rtree_get_keys(struct rtree_t *rtree);
             char **keys = rtree_get_keys(rtree);
 
-            printf("Keys of Tree: { ");
-            for (size_t i = 0; keys[i] != NULL; i++)
-            {
+            printf("Keys of Tree: {");
+            for (size_t i = 0; keys[i] != NULL; i++){
                 printf("%s", keys[i]);
-                if (keys[i + 1] != NULL )
-                {
+                if (keys[i + 1] != NULL){
                     printf(", ");
                 }
             }
-            printf("}");
+            printf("}\n");
         }
+
         //CASE GETVALUES:
         else if(strcmp(command, "getvalues") == 0){
-            //TODO...
-            //void **rtree_get_values(struct rtree_t *rtree);
+            char **values = (char**)rtree_get_values(rtree);;
+
+            printf("Values of Tree: {");
+            for (size_t i = 0; values[i] != NULL; i++){
+                printf("%s", values[i]);
+                if (values[i + 1] != NULL){
+                    printf(", ");
+                }
+            }
+            printf("}\n");
         }
+
         //CASE QUIT:
         else if(strcmp(command, "quit") == 0){
             //Disconnecting from server/tree
@@ -182,10 +193,12 @@ int main(int argc, char *argv[]){
             printf("Disconnected from server\n");
             break;
         }
+
         //CASE COMMANDS:
         else if(strcmp(command, "commands") == 0){
             printf("------//-----\n put <key> <data>\n get <key> \n del <key> \n size \n height \n getkeys \n getvalues \n quit \n------//-----\n");
         }
+
         //CASE DEFAULT
         else{
             printf("Input not recognised, type \"commands\" for a list of the possible commands.\n");
