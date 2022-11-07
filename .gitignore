@@ -62,6 +62,5 @@ dkms.conf
 Debug/
 bin/
 .vscode
-Client/binary/*
-Server/binary/*
+
 

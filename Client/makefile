@@ -3,6 +3,9 @@ OBJ = entry.o data.o client_stub.o network_client.o sdmessage.pb-c.o
 tree-client: required_dirs cliente-lib.o tree_client.o
 	gcc object/cliente-lib.o object/tree_client.o -lprotobuf-c -o binary/tree-client
 
+auto-client: required_dirs cliente-lib.o auto_client.o
+	gcc object/cliente-lib.o object/auto_client.o -lprotobuf-c -o binary/auto-client
+
 cliente-lib.o: required_dirs $(OBJ)
 	ld -r $(addprefix object/,$(OBJ)) -o object/cliente-lib.o
 
